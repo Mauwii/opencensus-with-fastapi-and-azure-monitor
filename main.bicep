@@ -32,8 +32,6 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2020-06-01' = {
   }
 }
 
-output webAppName string = webApp.name
-
 resource appService 'Microsoft.Web/sites@2020-06-01' = {
   name: appServiceName
   location: location
