@@ -8,7 +8,7 @@ from opencensus.trace.status import Status
 from opencensus.trace import config_integration
 from opencensus.ext.azure.log_exporter import AzureLogHandler
 
-#FastAPI & Other imports 
+#FastAPI & Other imports
 from fastapi import FastAPI, Request
 from dotenv import load_dotenv
 from datetime import datetime
@@ -37,7 +37,7 @@ class Club(BaseModel):
 # load en vars
 load_dotenv()
 
-# get instrumentation key 
+# get instrumentation key
 APPINSIGHTS_INSTRUMENTATIONKEY = os.environ["APPINSIGHTS_INSTRUMENTATIONKEY"]
 
 HTTP_URL = COMMON_ATTRIBUTES['HTTP_URL']
@@ -61,7 +61,7 @@ async def add_process_time_header(request: Request, call_next):
     tracer = Tracer(exporter=AzureExporter(connection_string=f'InstrumentationKey={APPINSIGHTS_INSTRUMENTATIONKEY}'),sampler=ProbabilitySampler(1.0))
     with tracer.span("main") as span:
         span.span_kind = SpanKind.SERVER
-            
+
         response = await call_next(request)
 
         tracer.add_attribute_to_current_span(
@@ -70,7 +70,7 @@ async def add_process_time_header(request: Request, call_next):
         tracer.add_attribute_to_current_span(
             attribute_key=HTTP_URL,
             attribute_value=str(request.url))
-        
+
     return response
 
 @app.get("/")
@@ -98,7 +98,7 @@ def create_club(club:Club):
         properties = {'custom_dimensions': club_db[-1] }
         print(properties)
         logger.warning('club record is added', extra=properties)
-        
+
         return club_db[-1]
     except:
         # log exception when there's an error
@@ -160,4 +160,4 @@ async def log_custom_metric():
 
 if __name__=="__main__":
     print("main started")
-    uvicorn.run("main:app", port=8000, log_level="info")
+    uvicorn.run("main:app", port=8000, host="0.0.0.0", log_level="info")
