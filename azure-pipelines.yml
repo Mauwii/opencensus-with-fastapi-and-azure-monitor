@@ -1,0 +1,30 @@
+trigger:
+  branches:
+    include:
+      - main
+      - dev
+
+pr:
+  branches:
+    include:
+      - main
+
+steps:
+  - task: Docker@2
+    inputs:
+      containerRegistry: "docker-mauwii"
+      repository: "fastapi-opencensus"
+      command: "buildAndPush"
+      Dockerfile: "**/Dockerfile"
+      tags: |
+        $(Build.BuildId)
+        latest
+  - task: AzureCLI@2
+    inputs:
+      azureSubscription: azure-mauwii
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        az deployment group create \
+          -g azure-pipelines-with-github-repo \
+          -f main.bicep

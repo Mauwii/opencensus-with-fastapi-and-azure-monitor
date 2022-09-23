@@ -1,0 +1,11 @@
+**/__cache__
+.venv
+.git
+.github
+.gitignore
+.gitatributes
+.env.sample.txt
+**/*.md
+**/*.pyc
+.env
+IaC
