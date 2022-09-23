@@ -82,7 +82,7 @@ resource appService 'Microsoft.Web/sites@2018-11-01' = {
         }
       ]
       minTlsVersion: '1.2'
-      linuxFxVersion: 'DOCKER|index.docker.io/mauwii/fastapi-opencensus:tagname'
+      linuxFxVersion: 'DOCKER|mauwii/fastapi-opencensus:tagname'
       appCommandLine: ''
       alwaysOn: false
       ftpsState: 'Disabled'
