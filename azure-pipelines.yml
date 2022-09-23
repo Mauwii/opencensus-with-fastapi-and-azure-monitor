@@ -13,7 +13,7 @@ steps:
   - task: Docker@2
     inputs:
       containerRegistry: "docker-mauwii"
-      repository: "fastapi-opencensus"
+      repository: "mauwii/fastapi-opencensus"
       command: "buildAndPush"
       Dockerfile: "**/Dockerfile"
       tags: |
