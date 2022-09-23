@@ -5,6 +5,7 @@ param skuCode string = 'F1'
 param dockerRegistryUrl string = 'https://index.docker.io'
 param dockerRegistryUsername string = 'mauwii'
 param tag string = 'latest'
+param websitePort string = '8080'
 
 var uniqueName = '${name}-${substring(uniqueString(resourceGroup().id), 0, 4)}'
 var appServiceName = 'app-${uniqueName}'
@@ -75,7 +76,7 @@ resource appService 'Microsoft.Web/sites@2020-06-01' = {
         }
         {
           name: 'WEBSITE_PORT'
-          value: '8000'
+          value: websitePort
         }
       ]
     }
