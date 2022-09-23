@@ -2,20 +2,15 @@ param name string = 'fastapi-opencensus'
 param location string = resourceGroup().location
 param sku string = 'Free'
 param skuCode string = 'F1'
-// param skuCapacity int = 1
 param dockerRegistryUrl string = 'https://index.docker.io'
 param dockerRegistryUsername string = 'mauwii'
-// param linuxFxVersion string = 'DOCKER|mauwii/fastapi-opencensus:latest'
-
-// @secure()
-// param dockerRegistryPassword string
-// param dockerRegistryStartupCommand string
+param tag string = 'latest'
 
 var uniqueName = '${name}-${substring(uniqueString(resourceGroup().id), 0, 4)}'
 var appServiceName = 'app-${uniqueName}'
 var appServicePlanName = 'asp-${uniqueName}'
 var appInsightsName = 'ai-${uniqueName}'
-// var linuxFxVersion = 'DOCKER|${dockerRegistryUsername}/${name}:latest'
+var linuxFxVersion = 'DOCKER|${dockerRegistryUsername}/${name}:${tag}'
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2020-06-01' = {
   name: appServicePlanName
@@ -41,7 +36,7 @@ resource appService 'Microsoft.Web/sites@2020-06-01' = {
     serverFarmId: appServicePlan.id
     clientAffinityEnabled: false
     siteConfig: {
-      linuxFxVersion: 'DOCKER|mauwii/fastapi-opencensus:tagname'
+      linuxFxVersion: linuxFxVersion
       minTlsVersion: '1.2'
       ftpsState: 'FtpsOnly'
       appCommandLine: ''
