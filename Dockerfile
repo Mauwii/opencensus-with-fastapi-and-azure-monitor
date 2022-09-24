@@ -1,23 +1,29 @@
-FROM python:3.10-slim
+FROM --platform=$BUILDPLATFORM python:3.10 AS builder
 
-WORKDIR /app
+ARG APP_PATH=/app
+WORKDIR ${APP_PATH}
+ENV PATH ${APP_PATH}/.venv/bin:$PATH
 
-COPY . ./
+COPY requirements.txt /tmp
+COPY src ./
 
-RUN apt-get update \
-  && apt-get install \
-    --no-install-recommends \
-    -y \
-    gcc=4:10.2.1-1 \
-    python3-dev=3.9.2-3 \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/* \
+RUN python -m venv .venv \
   && python -m pip install  \
     --no-cache-dir \
-    --upgrade \
-    -r requirements.txt
+    -r /tmp/requirements.txt
 
-ENV PORT 8080
-EXPOSE 8080
+FROM python:3.10-slim
 
-CMD [ "python", "src/main.py"]
+ARG APP_PATH=/app
+ARG APP_PORT=8000
+WORKDIR ${APP_PATH}
+
+COPY --from=builder ${APP_PATH} ${APP_PATH}
+
+ENV \
+  PATH=${APP_PATH}/.venv/bin:$PATH \
+  APP_PORT=${APP_PORT}
+
+EXPOSE ${APP_PORT}
+
+ENTRYPOINT [ "python", "main.py"]
