@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM python:3.10 AS builder
+FROM python:3.10 AS builder
 
 ARG APP_PATH=/app
 WORKDIR ${APP_PATH}
