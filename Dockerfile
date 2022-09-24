@@ -11,7 +11,7 @@ RUN python -m venv .venv \
   && python -m pip install \
     --require-virtualenv \
     --no-cache-dir \
-    --upgrade pip  \
+    --upgrade "pip>=22.2.2"  \
   && python -m pip install \
     --require-virtualenv \
     --no-cache-dir \
