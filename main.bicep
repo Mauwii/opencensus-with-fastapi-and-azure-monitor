@@ -95,4 +95,6 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
+output webAppName string = appService.name
 output webAppHostname string = appService.properties.defaultHostName
+output insightsId string = appInsights.id
