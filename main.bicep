@@ -1,11 +1,11 @@
-param name string = 'fastapi-opencensus'
+param name string
 param location string = resourceGroup().location
 param sku string = 'Free'
 param skuCode string = 'F1'
-param dockerRegistryUrl string = 'https://index.docker.io'
-param dockerRegistryUsername string = 'mauwii'
-param tag string = 'latest'
-param websitePort string = '8080'
+param dockerRegistryUrl string
+param dockerRegistryUsername string
+param tag string
+param websitePort string
 
 var uniqueName = '${name}-${substring(uniqueString(resourceGroup().id), 0, 4)}'
 var appServiceName = 'app-${uniqueName}'
