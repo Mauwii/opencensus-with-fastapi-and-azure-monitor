@@ -9,16 +9,53 @@ pr:
     include:
       - main
 
+parameters:
+  - name: name
+    type: string
+    default: 'fastapi-opencensus'
+  - name: appPort
+    type: string
+    default: '8000'
+  - name: dockerRegistryUrl
+    type: string
+    default: 'https://index.docker.io'
+  - name: dockerRegistryUsername
+    type: string
+    default: mauwii
+  - name: dockerTag
+    type: string
+    default: $(Build.BuildId)
+  - name: resourceLocation
+    type: string
+    default: 'westeurope'
+
 steps:
   - task: Docker@2
     inputs:
-      containerRegistry: "docker-mauwii"
-      repository: "mauwii/fastapi-opencensus"
-      command: "buildAndPush"
-      Dockerfile: "**/Dockerfile"
-      tags: |
-        $(Build.BuildId)
-        latest
+      containerRegistry: 'docker-mauwii'
+      repository: '${{ parameters.dockerRegistryUsername }}/${{ parameters.name }}'
+      command: 'build'
+      Dockerfile: './Dockerfile'
+      tags: '${{ parameters.dockerTag }}'
+      arguments: '--build-arg=APP_PORT=${{ parameters.appPort }}'
+
+  - task: Docker@2
+    inputs:
+      containerRegistry: 'docker-mauwii'
+      repository: '${{ parameters.dockerRegistryUsername }}/${{ parameters.name }}'
+      command: 'push'
+      tags: '${{ parameters.dockerTag }}'
+
+  - task: AzureCLI@2
+    inputs:
+      azureSubscription: azure-mauwii
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        az group create \
+          --resource-group ${{ parameters.name }} \
+          --location ${{ parameters.resourceLocation }}
+
   - task: AzureCLI@2
     inputs:
       azureSubscription: azure-mauwii
@@ -26,5 +63,11 @@ steps:
       scriptLocation: inlineScript
       inlineScript: |
         az deployment group create \
-          -g azure-pipelines-with-github-repo \
-          -f main.bicep
+          --resource-group azure-pipelines-with-github-repo \
+          --template-file main.bicep \
+          --parameters \
+            name=${{ parameters.name }} \
+            dockerRegistryUrl=${{ parameters.dockerRegistryUrl }} \
+            dockerRegistryUsername=${{ parameters.dockerRegistryUsername }} \
+            websitePort=${{ parameters.appPort }} \
+            tag=${{ parameters.dockerTag }}
