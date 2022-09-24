@@ -76,7 +76,7 @@ jobs:
             az deployment group what-if \
               --resource-group ${{ parameters.name }} \
               --template-file main.bicep \
-              --name=$(Build.SourceBranchName)
+              --name=$(Build.SourceBranchName) \
               --parameters \
                 name=${{ parameters.name }} \
                 containerRegistryUrl=${{ parameters.containerRegistryUrl }} \
@@ -94,7 +94,7 @@ jobs:
             az deployment group create \
               --resource-group ${{ parameters.name }} \
               --template-file main.bicep \
-              --name=$(Build.SourceBranchName)
+              --name=$(Build.SourceBranchName) \
               --parameters \
                 name=${{ parameters.name }} \
                 containerRegistryUrl=${{ parameters.containerRegistryUrl }} \
