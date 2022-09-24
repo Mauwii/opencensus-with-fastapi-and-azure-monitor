@@ -31,6 +31,7 @@ parameters:
 
 steps:
   - task: Docker@2
+    displayName: build Container
     inputs:
       containerRegistry: 'docker-mauwii'
       repository: '${{ parameters.dockerRegistryUsername }}/${{ parameters.name }}'
@@ -40,6 +41,7 @@ steps:
       arguments: '--build-arg=APP_PORT=${{ parameters.appPort }}'
 
   - task: Docker@2
+    displayName: push Container
     inputs:
       containerRegistry: 'docker-mauwii'
       repository: '${{ parameters.dockerRegistryUsername }}/${{ parameters.name }}'
@@ -47,6 +49,7 @@ steps:
       tags: '${{ parameters.dockerTag }}'
 
   - task: AzureCLI@2
+    displayName: create Resourcegroup
     inputs:
       azureSubscription: azure-mauwii
       scriptType: bash
@@ -57,6 +60,24 @@ steps:
           --location ${{ parameters.resourceLocation }}
 
   - task: AzureCLI@2
+    displayName: preflight validation
+    inputs:
+      azureSubscription: azure-mauwii
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        az deployment group what-if \
+          --resource-group ${{ parameters.name }} \
+          --template-file main.bicep \
+          --parameters \
+            name=${{ parameters.name }} \
+            dockerRegistryUrl=${{ parameters.dockerRegistryUrl }} \
+            dockerRegistryUsername=${{ parameters.dockerRegistryUsername }} \
+            websitePort=${{ parameters.appPort }} \
+            tag=${{ parameters.dockerTag }}
+
+  - task: AzureCLI@2
+    displayName: deplyo Resources
     inputs:
       azureSubscription: azure-mauwii
       scriptType: bash
