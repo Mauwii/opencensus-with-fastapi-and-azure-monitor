@@ -1,15 +1,24 @@
 trigger:
   branches:
     include:
-      - main
-      - dev
+      - refs/heads/main
+      - refs/heads/dev
 
 pr:
   branches:
     include:
-      - main
+      - refs/heads/main
 
 parameters:
+  - name: azureServiceConnection
+    type: string
+    default: 'azure-mauwii'
+  - name: azureSubscription
+    type: string
+    default: '58c48c56-8c1c-402a-a9d1-5efa2e34e124'
+  - name: 'pythonVersion'
+    type: string
+    default: '3.10'
   - name: name
     type: string
     default: 'fastapi-opencensus'
@@ -21,15 +30,19 @@ parameters:
     default: 'https://index.docker.io'
   - name: containerRegistryUsername
     type: string
-    default: mauwii
+    default: 'mauwii'
   - name: containerTag
     type: string
-    default: $(Build.BuildId)
+    default: '$(Build.BuildId)'
   - name: resourceLocation
     type: string
     default: 'westeurope'
 
 variables:
+  - name: azureServiceConnection
+    value: '${{ parameters.azureServiceConnection }}'
+  - name: azureSubscription
+    value: '${{ parameters.azureSubscription }}'
   - name: repository
     value: '${{ parameters.containerRegistryUsername }}/${{ parameters.name }}'
   - name: tag
@@ -38,89 +51,176 @@ variables:
       - name: devtag
         value: '-dev'
 
-steps:
-  - task: Cache@2
-    displayName: Cache task
-    inputs:
-      key: 'docker | "$(Agent.OS)" | cache'
-      path: $(Pipeline.Workspace)/docker
-      cacheHitVar: CACHE_RESTORED
+jobs:
+  - job: bicep
+    displayName: Bicep
+    steps:
+      - task: AzureCLI@2
+        displayName: create Resourcegroup
+        inputs:
+          azureSubscription: $(azureServiceConnection)
+          scriptType: bash
+          scriptLocation: inlineScript
+          inlineScript: |
+            az group create \
+              --resource-group ${{ parameters.name }} \
+              --location ${{ parameters.resourceLocation }}
 
-  - script: |
-      docker load -i $(Pipeline.Workspace)/docker/cache.tar
-    displayName: Docker restore
-    condition: and(not(canceled()), eq(variables.CACHE_RESTORED, 'true'))
+      - task: AzureCLI@2
+        displayName: preflight validation
+        inputs:
+          azureSubscription: $(azureServiceConnection)
+          scriptType: bash
+          scriptLocation: inlineScript
+          inlineScript: |
+            az deployment group what-if \
+              --resource-group ${{ parameters.name }} \
+              --template-file main.bicep \
+              --name=$(Build.SourceBranchName)
+              --parameters \
+                name=${{ parameters.name }} \
+                containerRegistryUrl=${{ parameters.containerRegistryUrl }} \
+                containerRegistryUsername=${{ parameters.containerRegistryUsername }} \
+                containerPort=${{ parameters.containerPort }} \
+                containerTag=$(tag)
 
-  - task: Docker@2
-    displayName: build Container
-    inputs:
-      containerRegistry: 'docker-mauwii'
-      repository: '$(repository)'
-      command: 'build'
-      Dockerfile: './Dockerfile'
-      tags: |
-        latest${{ variables.devtag }}
-        $(tag)
-      arguments: '--build-arg=PORT=${{ parameters.containerPort }}'
+      - task: AzureCLI@2
+        displayName: deplyo Resources
+        inputs:
+          azureSubscription: $(azureServiceConnection)
+          scriptType: bash
+          scriptLocation: inlineScript
+          inlineScript: |
+            az deployment group create \
+              --resource-group ${{ parameters.name }} \
+              --template-file main.bicep \
+              --name=$(Build.SourceBranchName)
+              --parameters \
+                name=${{ parameters.name }} \
+                containerRegistryUrl=${{ parameters.containerRegistryUrl }} \
+                containerRegistryUsername=${{ parameters.containerRegistryUsername }} \
+                containerPort=${{ parameters.containerPort }} \
+                containerTag=$(tag)
 
-  - script: |
-      mkdir -p $(Pipeline.Workspace)/docker
-      docker save -o $(Pipeline.Workspace)/docker/cache.tar $(repository):$(tag)
-    displayName: Docker save
-    continueOnError: true
-    condition: and(not(canceled()), or(failed(), ne(variables.CACHE_RESTORED, 'true')))
+  - job: testPythonApp
+    displayName: test python
+    dependsOn: bicep
+    steps:
+      - task: AzureCLI@2
+        displayName: get InstrumentationKey
+        inputs:
+          azureSubscription: $(azureServiceConnection)
+          scriptType: bash
+          scriptLocation: inlineScript
+          inlineScript: |
+            insightsId=$(az deployment group show \
+              --resource-group ${{ parameters.name }} \
+              --name $(Build.SourceBranchName) \
+              --query properties.outputs.insightsId.value \
+              -o tsv)
+            connectionString=$(az resource show \
+              --ids $insightsId \
+              --query properties.ConnectionString \
+              -o tsv)
+            echo "##vso[task.setvariable variable=APPINSIGHTS_CONNECTION_STRING;]${connectionString}"
 
-  - task: Docker@2
-    displayName: push Container
-    inputs:
-      containerRegistry: 'docker-mauwii'
-      repository: '$(repository)'
-      command: 'push'
-      tags: |
-        latest${{ variables.devtag }}
-        $(tag)
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '${{ parameters.pythonVersion }}'
+          addToPath: true
 
-  - task: AzureCLI@2
-    displayName: create Resourcegroup
-    inputs:
-      azureSubscription: azure-mauwii
-      scriptType: bash
-      scriptLocation: inlineScript
-      inlineScript: |
-        az group create \
-          --resource-group ${{ parameters.name }} \
-          --location ${{ parameters.resourceLocation }}
+      - script: |
+          python -m pip install \
+            --upgrade \
+              pip \
+              setuptools \
+              wheel
+        displayName: update dependencies
 
-  - task: AzureCLI@2
-    displayName: preflight validation
-    inputs:
-      azureSubscription: azure-mauwii
-      scriptType: bash
-      scriptLocation: inlineScript
-      inlineScript: |
-        az deployment group what-if \
-          --resource-group ${{ parameters.name }} \
-          --template-file main.bicep \
-          --parameters \
-              name=${{ parameters.name }} \
-              containerRegistryUrl=${{ parameters.containerRegistryUrl }} \
-              containerRegistryUsername=${{ parameters.containerRegistryUsername }} \
-              containerPort=${{ parameters.containerPort }} \
-              containerTag=$(tag)
+      - script: |
+          python -m pip install \
+            -r requirements.txt
+        displayName: install requirements
 
-  - task: AzureCLI@2
-    displayName: deplyo Resources
-    inputs:
-      azureSubscription: azure-mauwii
-      scriptType: bash
-      scriptLocation: inlineScript
-      inlineScript: |
-        az deployment group create \
-          --resource-group ${{ parameters.name }} \
-          --template-file main.bicep \
-          --parameters \
-              name=${{ parameters.name }} \
-              containerRegistryUrl=${{ parameters.containerRegistryUrl }} \
-              containerRegistryUsername=${{ parameters.containerRegistryUsername }} \
-              containerPort=${{ parameters.containerPort }} \
-              containerTag=$(tag)
+      - script: |
+          pytest \
+            --doctest-modules \
+            --junitxml=junit/test-results.xml
+        displayName: run pytest
+
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        inputs:
+          testResultsFiles: '**/test-*.xml'
+          testRunTitle: 'Publish test results for Python $(python.version)'
+
+  - job: container
+    displayName: Container
+    dependsOn: testPythonApp
+    steps:
+      - task: Cache@2
+        displayName: Cache task
+        inputs:
+          key: 'docker | "$(Agent.OS)" | cache'
+          path: $(Pipeline.Workspace)/docker
+          cacheHitVar: CACHE_RESTORED
+
+      - script: |
+          docker load -i $(Pipeline.Workspace)/docker/cache.tar
+        displayName: Docker restore
+        condition: and(not(canceled()), eq(variables.CACHE_RESTORED, 'true'))
+
+      - task: Docker@2
+        displayName: build Container
+        inputs:
+          containerRegistry: 'docker-mauwii'
+          repository: '$(repository)'
+          command: 'build'
+          Dockerfile: './Dockerfile'
+          tags: |
+            latest${{ variables.devtag }}
+            $(tag)
+          arguments: '--build-arg=PORT=${{ parameters.containerPort }}'
+
+      - script: |
+          mkdir -p $(Pipeline.Workspace)/docker
+          docker save -o $(Pipeline.Workspace)/docker/cache.tar $(repository):$(tag)
+        displayName: Docker save
+        continueOnError: true
+        condition: and(not(canceled()), or(failed(), ne(variables.CACHE_RESTORED, 'true')))
+
+      - task: Docker@2
+        displayName: push Container
+        inputs:
+          containerRegistry: 'docker-mauwii'
+          repository: '$(repository)'
+          command: 'push'
+          tags: |
+            latest${{ variables.devtag }}
+            $(tag)
+
+  - job: webAppContainer
+    dependsOn: container
+    displayName: update webApp Container
+    steps:
+      - task: AzureCLI@2
+        displayName: get webApp Name
+        inputs:
+          azureSubscription: $(azureServiceConnection)
+          scriptType: bash
+          scriptLocation: inlineScript
+          inlineScript: |
+            webAppName=$(az deployment group show \
+              --resource-group ${{ parameters.name }} \
+              --name $(Build.SourceBranchName) \
+              --query properties.outputs.webAppName.value \
+              -o tsv)
+            echo "##vso[task.setvariable variable=webAppName;]${webAppName}"
+
+      - task: AzureWebAppContainer@1
+        displayName: Deploy WebApp Container
+        inputs:
+          appName: '$(webAppName)'
+          resourceGroupName: '${{ parameters.name }}'
+          azureSubscription: '$(azureSubscription)'
+          imageName: '$(repository):$(tag)'
