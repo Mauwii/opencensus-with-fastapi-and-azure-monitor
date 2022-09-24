@@ -157,7 +157,9 @@ async def log_custom_metric():
     view_manager.register_exporter(exporter)
     return "Log custom metric"
 
+# get port
+APP_PORT = int(os.environ["APP_PORT"])
 
 if __name__=="__main__":
     print("main started")
-    uvicorn.run("main:app", port=8000, host="0.0.0.0", log_level="info")
+    uvicorn.run("main:app", port=APP_PORT, host="0.0.0.0", log_level="info")
