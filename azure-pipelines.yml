@@ -29,6 +29,10 @@ parameters:
     type: string
     default: 'westeurope'
 
+${{ if eq(variables['Build.SourceBranch'], 'refs/heads/dev') }}:
+  variables:
+    DEVTAG: '-dev'
+
 steps:
   - task: Docker@2
     displayName: build Container
@@ -37,7 +41,9 @@ steps:
       repository: '${{ parameters.dockerRegistryUsername }}/${{ parameters.name }}'
       command: 'build'
       Dockerfile: './Dockerfile'
-      tags: '${{ parameters.dockerTag }}'
+      tags: |
+        latest$[variables.DEVTAG]
+        ${{ parameters.dockerTag }}
       arguments: '--build-arg=APP_PORT=${{ parameters.appPort }}'
 
   - task: Docker@2
@@ -46,7 +52,9 @@ steps:
       containerRegistry: 'docker-mauwii'
       repository: '${{ parameters.dockerRegistryUsername }}/${{ parameters.name }}'
       command: 'push'
-      tags: '${{ parameters.dockerTag }}'
+      tags: |
+        latest$[variables.DEVTAG]
+        ${{ parameters.dockerTag }}
 
   - task: AzureCLI@2
     displayName: create Resourcegroup
