@@ -29,9 +29,10 @@ parameters:
     type: string
     default: 'westeurope'
 
-${{ if eq(variables['Build.SourceBranch'], 'refs/heads/dev') }}:
-  variables:
-    DEVTAG: '-dev'
+variables:
+  - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/dev') }}:
+      - name: DEVTAG
+        value: '-dev'
 
 steps:
   - task: Docker@2
