@@ -15,15 +15,13 @@ RUN python -m venv .venv \
 FROM python:3.10-slim
 
 ARG APP_PATH=/app
-ARG APP_PORT=8000
+ARG PORT=8000
 WORKDIR ${APP_PATH}
 
 COPY --from=builder ${APP_PATH} ${APP_PATH}
 
-ENV \
-  PATH=${APP_PATH}/.venv/bin:$PATH \
-  APP_PORT=${APP_PORT}
+ENV PATH ${APP_PATH}/.venv/bin:$PATH
 
-EXPOSE ${APP_PORT}
+EXPOSE ${PORT}
 
-ENTRYPOINT [ "python", "main.py"]
+CMD [ "gunicorn", "--config", "gunicorn.py", "main:app"]

@@ -38,7 +38,8 @@ class Club(BaseModel):
 load_dotenv()
 
 # get instrumentation key
-APPINSIGHTS_INSTRUMENTATIONKEY = os.environ["APPINSIGHTS_INSTRUMENTATIONKEY"]
+APPINSIGHTS_CONNECTION_STRING = os.environ["APPINSIGHTS_CONNECTION_STRING"]
+
 
 HTTP_URL = COMMON_ATTRIBUTES['HTTP_URL']
 HTTP_STATUS_CODE = COMMON_ATTRIBUTES['HTTP_STATUS_CODE']
@@ -49,7 +50,7 @@ async def startup_event():
     config_integration.trace_integrations(['logging'])
     logger = logging.getLogger(__name__)
 
-    handler = AzureLogHandler(connection_string=f'InstrumentationKey={APPINSIGHTS_INSTRUMENTATIONKEY}')
+    handler = AzureLogHandler(connection_string=f'{APPINSIGHTS_CONNECTION_STRING}')
     logger.addHandler(handler)
 
 @app.on_event('shutdown')
@@ -58,7 +59,7 @@ async def shutdown_event():
 
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
-    tracer = Tracer(exporter=AzureExporter(connection_string=f'InstrumentationKey={APPINSIGHTS_INSTRUMENTATIONKEY}'),sampler=ProbabilitySampler(1.0))
+    tracer = Tracer(exporter=AzureExporter(connection_string=f'{APPINSIGHTS_CONNECTION_STRING}'),sampler=ProbabilitySampler(1.0))
     with tracer.span("main") as span:
         span.span_kind = SpanKind.SERVER
 
@@ -152,14 +153,19 @@ async def log_custom_metric():
         print(metrics[0].time_series[0].points[0])
 
     exporter = metrics_exporter.new_metrics_exporter(
-        connection_string=f'InstrumentationKey={APPINSIGHTS_INSTRUMENTATIONKEY}')
+        connection_string=f'{APPINSIGHTS_CONNECTION_STRING}')
 
     view_manager.register_exporter(exporter)
     return "Log custom metric"
 
 # get port
-APP_PORT = int(os.environ["APP_PORT"])
+PORT = int(os.environ["PORT"])
 
 if __name__=="__main__":
     print("main started")
-    uvicorn.run("main:app", port=APP_PORT, host="0.0.0.0", log_level="info")
+    uvicorn.run(
+        "main:app",
+        port=int(os.environ["PORT"]),
+        host="0.0.0.0",
+        log_level="info"
+        )

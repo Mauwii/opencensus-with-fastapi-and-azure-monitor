@@ -7,7 +7,17 @@ param dockerRegistryUsername string
 param tag string
 param websitePort string
 
-var uniqueName = '${name}-${substring(uniqueString(resourceGroup().id), 0, 4)}'
+@description('Log-level of the WebApp http-logs')
+@allowed([
+  'Error'
+  'Information'
+  'Off'
+  'Verbose'
+  'Warning'
+])
+param logLevel string = 'Information'
+
+var uniqueName = toLower('${name}-${substring(uniqueString(resourceGroup().id), 0, 4)}')
 var appServiceName = 'app-${uniqueName}'
 var appServicePlanName = 'asp-${uniqueName}'
 var appInsightsName = 'ai-${uniqueName}'
@@ -31,7 +41,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2020-06-01' = {
 resource appService 'Microsoft.Web/sites@2020-06-01' = {
   name: appServiceName
   location: location
-  kind: 'app,linux,container'
+  kind: 'linux,container'
   properties: {
     httpsOnly: true
     serverFarmId: appServicePlan.id
@@ -41,13 +51,11 @@ resource appService 'Microsoft.Web/sites@2020-06-01' = {
       minTlsVersion: '1.2'
       ftpsState: 'FtpsOnly'
       appCommandLine: ''
+      httpLoggingEnabled: true
+      logsDirectorySizeLimit: 10
       appSettings: [
         {
-          name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
-          value: appInsights.properties.InstrumentationKey
-        }
-        {
-          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+          name: 'APPINSIGHTS_CONNECTION_STRING'
           value: appInsights.properties.ConnectionString
         }
         {
@@ -83,13 +91,56 @@ resource appService 'Microsoft.Web/sites@2020-06-01' = {
   }
 }
 
-resource appInsights 'Microsoft.Insights/components@2020-02-02-preview' = {
+resource appServiceLogging 'Microsoft.Web/sites/config@2020-06-01' = {
+  parent: appService
+  name: 'appsettings'
+  properties: {
+    APPINSIGHTS_CONNECTION_STRING: appInsights.properties.ConnectionString
+  }
+  dependsOn: [
+    appServiceSiteExtension
+  ]
+}
+
+resource appServiceSiteExtension 'Microsoft.Web/sites/siteextensions@2020-06-01' = {
+  parent: appService
+  name: 'Microsoft.ApplicationInsights.AzureWebSites'
+  dependsOn: [
+    appInsights
+  ]
+}
+
+resource appServiceAppSettings 'Microsoft.Web/sites/config@2020-06-01' = {
+  parent: appService
+  name: 'logs'
+  properties: {
+    applicationLogs: {
+      fileSystem: {
+        level: logLevel
+      }
+    }
+    httpLogs: {
+      fileSystem: {
+        retentionInMb: 35
+        enabled: true
+      }
+    }
+    failedRequestsTracing: {
+      enabled: true
+    }
+    detailedErrorMessages: {
+      enabled: true
+    }
+  }
+}
+
+resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   name: appInsightsName
   location: location
-  kind: 'linux'
-  tags: {
-  }
+  kind: 'web'
   properties: {
     Application_Type: 'web'
   }
 }
+
+output webAppHostname string = appService.properties.defaultHostName
