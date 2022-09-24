@@ -13,16 +13,16 @@ parameters:
   - name: name
     type: string
     default: 'fastapi-opencensus'
-  - name: appPort
+  - name: containerPort
     type: string
     default: '8000'
-  - name: dockerRegistryUrl
+  - name: containerRegistryUrl
     type: string
     default: 'https://index.docker.io'
-  - name: dockerRegistryUsername
+  - name: containerRegistryUsername
     type: string
     default: mauwii
-  - name: dockerTag
+  - name: containerTag
     type: string
     default: $(Build.BuildId)
   - name: resourceLocation
@@ -39,23 +39,23 @@ steps:
     displayName: build Container
     inputs:
       containerRegistry: 'docker-mauwii'
-      repository: '${{ parameters.dockerRegistryUsername }}/${{ parameters.name }}'
+      repository: '${{ parameters.containerRegistryUsername }}/${{ parameters.name }}'
       command: 'build'
       Dockerfile: './Dockerfile'
       tags: |
         latest${{ variables.DEVTAG }}
-        ${{ parameters.dockerTag }}
-      arguments: '--build-arg=APP_PORT=${{ parameters.appPort }}'
+        ${{ parameters.containerTag }}
+      arguments: '--build-arg=PORT=${{ parameters.containerPort }}'
 
   - task: Docker@2
     displayName: push Container
     inputs:
       containerRegistry: 'docker-mauwii'
-      repository: '${{ parameters.dockerRegistryUsername }}/${{ parameters.name }}'
+      repository: '${{ parameters.containerRegistryUsername }}/${{ parameters.name }}'
       command: 'push'
       tags: |
         latest${{ variables.DEVTAG }}
-        ${{ parameters.dockerTag }}
+        ${{ parameters.containerTag }}
 
   - task: AzureCLI@2
     displayName: create Resourcegroup
@@ -79,11 +79,11 @@ steps:
           --resource-group ${{ parameters.name }} \
           --template-file main.bicep \
           --parameters \
-            name=${{ parameters.name }} \
-            dockerRegistryUrl=${{ parameters.dockerRegistryUrl }} \
-            dockerRegistryUsername=${{ parameters.dockerRegistryUsername }} \
-            websitePort=${{ parameters.appPort }} \
-            tag=${{ parameters.dockerTag }}
+              name=${{ parameters.name }} \
+              containerRegistryUrl=${{ parameters.containerRegistryUrl }} \
+              containerRegistryUsername=${{ parameters.containerRegistryUsername }} \
+              containerPort=${{ parameters.containerPort }} \
+              containerTag=${{ parameters.containerTag }}
 
   - task: AzureCLI@2
     displayName: deplyo Resources
@@ -96,8 +96,8 @@ steps:
           --resource-group ${{ parameters.name }} \
           --template-file main.bicep \
           --parameters \
-            name=${{ parameters.name }} \
-            dockerRegistryUrl=${{ parameters.dockerRegistryUrl }} \
-            dockerRegistryUsername=${{ parameters.dockerRegistryUsername }} \
-            websitePort=${{ parameters.appPort }} \
-            tag=${{ parameters.dockerTag }}
+              name=${{ parameters.name }} \
+              containerRegistryUrl=${{ parameters.containerRegistryUrl }} \
+              containerRegistryUsername=${{ parameters.containerRegistryUsername }} \
+              containerPort=${{ parameters.containerPort }} \
+              containerTag=${{ parameters.containerTag }}

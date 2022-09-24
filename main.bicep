@@ -1,27 +1,22 @@
+@description('Name that will be used to build associated artifacts')
 param name string
+
+@description('Location for all resources.')
 param location string = resourceGroup().location
+
 param sku string = 'Free'
 param skuCode string = 'F1'
-param dockerRegistryUrl string
-param dockerRegistryUsername string
-param tag string
-param websitePort string
 
-@description('Log-level of the WebApp http-logs')
-@allowed([
-  'Error'
-  'Information'
-  'Off'
-  'Verbose'
-  'Warning'
-])
-param logLevel string = 'Information'
+param containerRegistryUrl string
+param containerRegistryUsername string
+param containerTag string
+param containerPort string
 
 var uniqueName = toLower('${name}-${substring(uniqueString(resourceGroup().id), 0, 4)}')
 var appServiceName = 'app-${uniqueName}'
 var appServicePlanName = 'asp-${uniqueName}'
 var appInsightsName = 'ai-${uniqueName}'
-var linuxFxVersion = 'DOCKER|${dockerRegistryUsername}/${name}:${tag}'
+var linuxFxVersion = 'DOCKER|${containerRegistryUsername}/${name}:${containerTag}'
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2020-06-01' = {
   name: appServicePlanName
@@ -45,14 +40,13 @@ resource appService 'Microsoft.Web/sites@2020-06-01' = {
   properties: {
     httpsOnly: true
     serverFarmId: appServicePlan.id
-    clientAffinityEnabled: false
     siteConfig: {
-      linuxFxVersion: linuxFxVersion
-      minTlsVersion: '1.2'
-      ftpsState: 'FtpsOnly'
-      appCommandLine: ''
+      detailedErrorLoggingEnabled: true
       httpLoggingEnabled: true
-      logsDirectorySizeLimit: 10
+      linuxFxVersion: linuxFxVersion
+      logsDirectorySizeLimit: 35
+      minTlsVersion: '1.2'
+      requestTracingEnabled: true
       appSettings: [
         {
           name: 'APPINSIGHTS_CONNECTION_STRING'
@@ -68,11 +62,11 @@ resource appService 'Microsoft.Web/sites@2020-06-01' = {
         }
         {
           name: 'DOCKER_REGISTRY_SERVER_URL'
-          value: dockerRegistryUrl
+          value: containerRegistryUrl
         }
         {
           name: 'DOCKER_REGISTRY_SERVER_USERNAME'
-          value: dockerRegistryUsername
+          value: containerRegistryUsername
         }
         {
           name: 'DOCKER_REGISTRY_SERVER_PASSWORD'
@@ -84,52 +78,9 @@ resource appService 'Microsoft.Web/sites@2020-06-01' = {
         }
         {
           name: 'WEBSITE_PORT'
-          value: websitePort
+          value: containerPort
         }
       ]
-    }
-  }
-}
-
-resource appServiceLogging 'Microsoft.Web/sites/config@2020-06-01' = {
-  parent: appService
-  name: 'appsettings'
-  properties: {
-    APPINSIGHTS_CONNECTION_STRING: appInsights.properties.ConnectionString
-  }
-  dependsOn: [
-    appServiceSiteExtension
-  ]
-}
-
-resource appServiceSiteExtension 'Microsoft.Web/sites/siteextensions@2020-06-01' = {
-  parent: appService
-  name: 'Microsoft.ApplicationInsights.AzureWebSites'
-  dependsOn: [
-    appInsights
-  ]
-}
-
-resource appServiceAppSettings 'Microsoft.Web/sites/config@2020-06-01' = {
-  parent: appService
-  name: 'logs'
-  properties: {
-    applicationLogs: {
-      fileSystem: {
-        level: logLevel
-      }
-    }
-    httpLogs: {
-      fileSystem: {
-        retentionInMb: 35
-        enabled: true
-      }
-    }
-    failedRequestsTracing: {
-      enabled: true
-    }
-    detailedErrorMessages: {
-      enabled: true
     }
   }
 }
