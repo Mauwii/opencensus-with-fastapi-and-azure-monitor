@@ -15,7 +15,7 @@ parameters:
     default: 'fastapi-opencensus'
   - name: containerPort
     type: string
-    default: '8000'
+    default: '8080'
   - name: containerRegistryUrl
     type: string
     default: 'https://index.docker.io'
@@ -30,8 +30,12 @@ parameters:
     default: 'westeurope'
 
 variables:
+  - name: repository
+    value: '${{ parameters.containerRegistryUsername }}/${{ parameters.name }}'
+  - name: tag
+    value: '${{ parameters.containerTag }}'
   - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/dev') }}:
-      - name: DEVTAG
+      - name: devtag
         value: '-dev'
 
 steps:
@@ -51,17 +55,17 @@ steps:
     displayName: build Container
     inputs:
       containerRegistry: 'docker-mauwii'
-      repository: '${{ parameters.containerRegistryUsername }}/${{ parameters.name }}'
+      repository: '$(repository)'
       command: 'build'
       Dockerfile: './Dockerfile'
       tags: |
-        latest${{ variables.DEVTAG }}
-        ${{ parameters.containerTag }}
+        latest${{ variables.devtag }}
+        $(tag)
       arguments: '--build-arg=PORT=${{ parameters.containerPort }}'
 
   - script: |
       mkdir -p $(Pipeline.Workspace)/docker
-      docker save -o $(Pipeline.Workspace)/docker/cache.tar ${{ parameters.containerRegistryUsername }}/${{ parameters.name }}:latest${{ variables.DEVTAG }}
+      docker save -o $(Pipeline.Workspace)/docker/cache.tar $(repository):$(tag)
     displayName: Docker save
     continueOnError: true
     condition: and(not(canceled()), or(failed(), ne(variables.CACHE_RESTORED, 'true')))
@@ -70,11 +74,11 @@ steps:
     displayName: push Container
     inputs:
       containerRegistry: 'docker-mauwii'
-      repository: '${{ parameters.containerRegistryUsername }}/${{ parameters.name }}'
+      repository: '$(repository)'
       command: 'push'
       tags: |
-        latest${{ variables.DEVTAG }}
-        ${{ parameters.containerTag }}
+        latest${{ variables.devtag }}
+        $(tag)
 
   - task: AzureCLI@2
     displayName: create Resourcegroup
@@ -102,7 +106,7 @@ steps:
               containerRegistryUrl=${{ parameters.containerRegistryUrl }} \
               containerRegistryUsername=${{ parameters.containerRegistryUsername }} \
               containerPort=${{ parameters.containerPort }} \
-              containerTag=${{ parameters.containerTag }}
+              containerTag=$(tag)
 
   - task: AzureCLI@2
     displayName: deplyo Resources
@@ -119,4 +123,4 @@ steps:
               containerRegistryUrl=${{ parameters.containerRegistryUrl }} \
               containerRegistryUsername=${{ parameters.containerRegistryUsername }} \
               containerPort=${{ parameters.containerPort }} \
-              containerTag=${{ parameters.containerTag }}
+              containerTag=$(tag)
