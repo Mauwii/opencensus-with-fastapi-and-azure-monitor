@@ -43,7 +43,7 @@ steps:
       command: 'build'
       Dockerfile: './Dockerfile'
       tags: |
-        latest$[variables.DEVTAG]
+        latest${{ variables.DEVTAG }}
         ${{ parameters.dockerTag }}
       arguments: '--build-arg=APP_PORT=${{ parameters.appPort }}'
 
@@ -54,7 +54,7 @@ steps:
       repository: '${{ parameters.dockerRegistryUsername }}/${{ parameters.name }}'
       command: 'push'
       tags: |
-        latest$[variables.DEVTAG]
+        latest${{ variables.DEVTAG }}
         ${{ parameters.dockerTag }}
 
   - task: AzureCLI@2
