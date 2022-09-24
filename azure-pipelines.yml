@@ -13,9 +13,9 @@ parameters:
   - name: azureServiceConnection
     type: string
     default: 'azure-mauwii'
-  - name: azureSubscription
-    type: string
-    default: '58c48c56-8c1c-402a-a9d1-5efa2e34e124'
+  # - name: azureSubscription
+  #   type: string
+  #   default: '58c48c56-8c1c-402a-a9d1-5efa2e34e124'
   - name: 'pythonVersion'
     type: string
     default: '3.10'
@@ -41,8 +41,8 @@ parameters:
 variables:
   - name: azureServiceConnection
     value: '${{ parameters.azureServiceConnection }}'
-  - name: azureSubscription
-    value: '${{ parameters.azureSubscription }}'
+  # - name: azureSubscription
+  #   value: '${{ parameters.azureSubscription }}'
   - name: repository
     value: '${{ parameters.containerRegistryUsername }}/${{ parameters.name }}'
   - name: tag
@@ -222,5 +222,5 @@ jobs:
         inputs:
           appName: '$(webAppName)'
           resourceGroupName: '${{ parameters.name }}'
-          azureSubscription: '$(azureSubscription)'
+          azureSubscription: '$(azureServiceConnection)'
           imageName: '$(repository):$(tag)'
