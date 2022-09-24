@@ -13,9 +13,9 @@ param containerTag string
 param containerPort string
 
 var uniqueName = toLower('${name}-${substring(uniqueString(resourceGroup().id), 0, 4)}')
-var appServiceName = 'app-${uniqueName}'
+var appServiceName = uniqueName
 var appServicePlanName = 'asp-${uniqueName}'
-var appInsightsName = 'ai-${uniqueName}'
+var appInsightsName = 'insights-${uniqueName}'
 var linuxFxVersion = 'DOCKER|${containerRegistryUsername}/${name}:${containerTag}'
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2020-06-01' = {
