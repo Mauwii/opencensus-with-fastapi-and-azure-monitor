@@ -42,6 +42,7 @@ resource appService 'Microsoft.Web/sites@2020-06-01' = {
     serverFarmId: appServicePlan.id
     siteConfig: {
       detailedErrorLoggingEnabled: true
+      ftpsState: 'FtpsOnly'
       httpLoggingEnabled: true
       linuxFxVersion: linuxFxVersion
       logsDirectorySizeLimit: 35

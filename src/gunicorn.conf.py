@@ -6,7 +6,8 @@ name = "Gunicorn config for FastAPI"
 # accesslog = "./gunicorn-access.log"
 # errorlog = "./gunicorn-error.log"
 
-bind = str("0.0.0.0:" + str(os.getenv("PORT")))
+PORT = os.getenv("WEBSITES_PORT")
+bind = str("0.0.0.0:" + PORT)
 timeout = 600
 worker_class = "uvicorn.workers.UvicornWorker"
 workers = multiprocessing.cpu_count() * 2 + 1

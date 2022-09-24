@@ -39,6 +39,8 @@ load_dotenv()
 
 # get instrumentation key
 APPINSIGHTS_CONNECTION_STRING = os.environ["APPINSIGHTS_CONNECTION_STRING"]
+# get port
+PORT = os.environ["WEBSITES_PORT"]
 
 
 HTTP_URL = COMMON_ATTRIBUTES['HTTP_URL']
@@ -158,14 +160,11 @@ async def log_custom_metric():
     view_manager.register_exporter(exporter)
     return "Log custom metric"
 
-# get port
-PORT = int(os.environ["PORT"])
-
 if __name__=="__main__":
     print("main started")
     uvicorn.run(
         "main:app",
-        port=int(os.environ["PORT"]),
+        port=int(PORT),
         host="0.0.0.0",
         log_level="info"
         )

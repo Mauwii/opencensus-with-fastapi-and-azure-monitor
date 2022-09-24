@@ -29,4 +29,4 @@ ENV PATH ${APP_PATH}/.venv/bin:$PATH
 
 EXPOSE ${PORT}
 
-CMD [ "gunicorn", "--config", "gunicorn.conf.py", "main:app"]
+CMD [ "gunicorn", "main:app"]
