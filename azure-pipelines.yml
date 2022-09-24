@@ -63,7 +63,7 @@ steps:
       scriptLocation: inlineScript
       inlineScript: |
         az deployment group create \
-          --resource-group azure-pipelines-with-github-repo \
+          --resource-group ${{ parameters.name }} \
           --template-file main.bicep \
           --parameters \
             name=${{ parameters.name }} \
