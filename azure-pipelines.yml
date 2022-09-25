@@ -204,7 +204,6 @@ jobs:
             --push \
             --file ./Dockerfile \
             .
-          docker stop tonistiigi/binfmt
         displayName: build and push multiarch container
 
       - script: |
