@@ -156,11 +156,6 @@ jobs:
     displayName: Container
     dependsOn: testPythonApp
     steps:
-      - task: Docker@2
-        inputs:
-          containerRegistry: 'docker-mauwii'
-          command: 'login'
-
       - task: Cache@2
         displayName: Cache task
         inputs:
@@ -184,6 +179,11 @@ jobs:
       #       latest${{ variables.devtag }}
       #       $(tag)
       #     arguments: '--build-arg=PORT=${{ parameters.containerPort }}'
+
+      - task: Docker@2
+        inputs:
+          containerRegistry: 'docker-mauwii'
+          command: 'login'
 
       - script: |
           docker run \
@@ -222,28 +222,28 @@ jobs:
       #       latest${{ variables.devtag }}
       #       $(tag)
 
-  - job: webAppContainer
-    dependsOn: container
-    displayName: update webApp Container
-    steps:
-      - task: AzureCLI@2
-        displayName: get webApp Name
-        inputs:
-          azureSubscription: $(azureServiceConnection)
-          scriptType: bash
-          scriptLocation: inlineScript
-          inlineScript: |
-            webAppName=$(az deployment group show \
-              --resource-group ${{ parameters.name }} \
-              --name $(Build.SourceBranchName) \
-              --query properties.outputs.webAppName.value \
-              -o tsv)
-            echo "##vso[task.setvariable variable=webAppName;]${webAppName}"
+  # - job: webAppContainer
+  #   dependsOn: container
+  #   displayName: update webApp Container
+  #   steps:
+  #     - task: AzureCLI@2
+  #       displayName: get webApp Name
+  #       inputs:
+  #         azureSubscription: $(azureServiceConnection)
+  #         scriptType: bash
+  #         scriptLocation: inlineScript
+  #         inlineScript: |
+  #           webAppName=$(az deployment group show \
+  #             --resource-group ${{ parameters.name }} \
+  #             --name $(Build.SourceBranchName) \
+  #             --query properties.outputs.webAppName.value \
+  #             -o tsv)
+  #           echo "##vso[task.setvariable variable=webAppName;]${webAppName}"
 
-      - task: AzureWebAppContainer@1
-        displayName: Deploy WebApp Container
-        inputs:
-          appName: '$(webAppName)'
-          resourceGroupName: '${{ parameters.name }}'
-          azureSubscription: '$(azureServiceConnection)'
-          imageName: '$(repository):$(tag)'
+  #     - task: AzureWebAppContainer@1
+  #       displayName: Deploy WebApp Container
+  #       inputs:
+  #         appName: '$(webAppName)'
+  #         resourceGroupName: '${{ parameters.name }}'
+  #         azureSubscription: '$(azureServiceConnection)'
+  #         imageName: '$(repository):$(tag)'
