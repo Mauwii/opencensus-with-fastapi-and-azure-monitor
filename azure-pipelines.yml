@@ -199,6 +199,8 @@ jobs:
             --push \
             .
         displayName: build and push multiarch container
+        env:
+          DOCKER_BUILDKIT: '1'
 
       - script: |
           mkdir -p $(Pipeline.Workspace)/docker
