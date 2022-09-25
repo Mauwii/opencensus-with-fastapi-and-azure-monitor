@@ -9,12 +9,15 @@ COPY src ./
 
 RUN python -m venv .venv \
   && python -m pip install \
-    --require-virtualenv \
-    --no-cache-dir \
-    --upgrade "pip>=22.2.2"  \
+    # --require-virtualenv \
+    # --no-cache-dir \
+    --upgrade \
+      pip \
+      setuptools \
+      wheel \
   && python -m pip install \
-    --require-virtualenv \
-    --no-cache-dir \
+    # --require-virtualenv \
+    # --no-cache-dir \
     -r /tmp/requirements.txt
 
 FROM python:3.10-slim
