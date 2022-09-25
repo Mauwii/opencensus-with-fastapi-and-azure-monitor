@@ -7,7 +7,6 @@ ENV PATH ${APP_PATH}/.venv/bin:${PATH}
 COPY requirements.txt /tmp
 COPY src ./
 
-
 RUN python -m venv .venv \
   && python -m pip install \
     --require-virtualenv \
