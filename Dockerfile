@@ -24,7 +24,7 @@ RUN python -m venv .venv \
 # ---- Main Stage ----
 FROM python:3.10-slim
 
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+# SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # set Workdir
 ARG APP_PATH=/app
