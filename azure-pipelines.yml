@@ -143,7 +143,7 @@ jobs:
         displayName: install requirements
 
       - script: |
-          pytest \
+          pytest tests/test.py \
             --doctest-modules \
             --junitxml=junit/test-results.xml
         displayName: run pytest
