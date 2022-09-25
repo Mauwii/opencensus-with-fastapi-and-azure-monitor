@@ -8,9 +8,9 @@ name = "Gunicorn config for FastAPI"
 
 APPINSIGHTS_CONNECTION_STRING = os.environ['APPINSIGHTS_CONNECTION_STRING']
 PORT = os.environ['WEBSITES_PORT']
-WEBSITE_HOSTNAME = os.environ['WEBSITE_HOSTNAME']
-
-bind = str(f'{WEBSITE_HOSTNAME}:{PORT}')
+# WEBSITE_HOSTNAME = os.environ['WEBSITE_HOSTNAME']
+FORWARDED_ALLOW_IPS = os.environ['WEBSITE_PRIVATE_IP']
+bind = str(f'0.0.0.0:{PORT}')
 # forwarded_allow_ips = WEBSITE_HOSTNAME
 timeout = 600
 worker_class = "uvicorn.workers.UvicornWorker"
