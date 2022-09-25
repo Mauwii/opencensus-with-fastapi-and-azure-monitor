@@ -7,6 +7,7 @@ name = "Gunicorn config for FastAPI"
 # errorlog = "./gunicorn-error.log"
 
 PORT = os.getenv("WEBSITES_PORT")
+
 bind = str("0.0.0.0:" + PORT)
 timeout = 600
 worker_class = "uvicorn.workers.UvicornWorker"

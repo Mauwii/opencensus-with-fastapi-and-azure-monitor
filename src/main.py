@@ -38,9 +38,10 @@ class Club(BaseModel):
 load_dotenv()
 
 # get instrumentation key
-APPINSIGHTS_CONNECTION_STRING = os.environ["APPINSIGHTS_CONNECTION_STRING"]
+APPINSIGHTS_CONNECTION_STRING = os.getenv("APPINSIGHTS_CONNECTION_STRING")
+
 # get port
-PORT = os.environ["WEBSITES_PORT"]
+PORT = os.getenv("WEBSITES_PORT")
 
 
 HTTP_URL = COMMON_ATTRIBUTES['HTTP_URL']
