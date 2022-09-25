@@ -168,59 +168,59 @@ jobs:
         displayName: Docker restore
         condition: and(not(canceled()), eq(variables.CACHE_RESTORED, 'true'))
 
-      # - task: Docker@2
-      #   displayName: build Container
-      #   inputs:
-      #     containerRegistry: 'docker-mauwii'
-      #     repository: '$(repository)'
-      #     command: 'build'
-      #     Dockerfile: './Dockerfile'
-      #     tags: |
-      #       latest${{ variables.devtag }}
-      #       $(tag)
-      #     arguments: '--build-arg=PORT=${{ parameters.containerPort }}'
+      - task: Docker@2
+        displayName: build Container
+        inputs:
+          containerRegistry: 'docker-mauwii'
+          repository: '$(repository)'
+          command: 'build'
+          Dockerfile: './Dockerfile'
+          tags: |
+            latest${{ variables.devtag }}
+            $(tag)
+          arguments: '--build-arg=PORT=${{ parameters.containerPort }}'
 
       - task: Docker@2
         inputs:
           containerRegistry: 'docker-mauwii'
           command: 'login'
 
-      - script: |
-          docker run \
-            --privileged \
-            --rm \
-            tonistiigi/binfmt \
-            --install all
-          docker buildx create \
-            --name mybuilder \
-            --driver docker-container \
-            --bootstrap \
-            --use
-          docker buildx build \
-            --platform linux/amd64,linux/arm64 \
-            --build-arg=PORT=${{ parameters.containerPort }} \
-            --tag $(repository):$(tag) \
-            --tag $(repository):latest${{ variables.devtag }} \
-            --push \
-            --file ./Dockerfile \
-            .
-        displayName: build and push multiarch container
+      # - script: |
+      #     docker run \
+      #       --privileged \
+      #       --rm \
+      #       tonistiigi/binfmt \
+      #       --install all
+      #     docker buildx create \
+      #       --name mybuilder \
+      #       --driver docker-container \
+      #       --bootstrap \
+      #       --use
+      #     docker buildx build \
+      #       --platform linux/amd64,linux/arm64 \
+      #       --build-arg=PORT=${{ parameters.containerPort }} \
+      #       --tag $(repository):$(tag) \
+      #       --tag $(repository):latest${{ variables.devtag }} \
+      #       --push \
+      #       --file ./Dockerfile \
+      #       .
+      #   displayName: build and push multiarch container
 
-      - script: |
-          mkdir -p $(Pipeline.Workspace)/docker
-          docker save -o $(Pipeline.Workspace)/docker/cache.tar $(repository):$(tag)
-        displayName: Docker save
-        condition: and(not(canceled()), or(failed(), ne(variables.CACHE_RESTORED, 'true')))
+      # - script: |
+      #     mkdir -p $(Pipeline.Workspace)/docker
+      #     docker save -o $(Pipeline.Workspace)/docker/cache.tar $(repository):$(tag)
+      #   displayName: Docker save
+      #   condition: and(not(canceled()), or(failed(), ne(variables.CACHE_RESTORED, 'true')))
 
-      # - task: Docker@2
-      #   displayName: push Container
-      #   inputs:
-      #     containerRegistry: 'docker-mauwii'
-      #     repository: '$(repository)'
-      #     command: 'push'
-      #     tags: |
-      #       latest${{ variables.devtag }}
-      #       $(tag)
+      - task: Docker@2
+        displayName: push Container
+        inputs:
+          containerRegistry: 'docker-mauwii'
+          repository: '$(repository)'
+          command: 'push'
+          tags: |
+            latest${{ variables.devtag }}
+            $(tag)
 
   # - job: webAppContainer
   #   dependsOn: container
