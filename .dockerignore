@@ -2,3 +2,4 @@
 !.venv
 !src
 !requirements.txt
+!docker
