@@ -35,26 +35,27 @@ class Club(BaseModel):
     established: int
 
 # load en vars
-load_dotenv()
+# load_dotenv()
 
-# get instrumentation key
-APPINSIGHTS_CONNECTION_STRING = os.getenv("APPINSIGHTS_CONNECTION_STRING")
-
-# get port
-PORT = os.getenv("WEBSITES_PORT")
-
+# get settings from env
+APPINSIGHTS_CONNECTION_STRING = os.environ['APPINSIGHTS_CONNECTION_STRING']
+PORT = os.environ['WEBSITES_PORT']
+# WEBSITE_HOSTNAME = os.environ['WEBSITE_HOSTNAME']
 
 HTTP_URL = COMMON_ATTRIBUTES['HTTP_URL']
 HTTP_STATUS_CODE = COMMON_ATTRIBUTES['HTTP_STATUS_CODE']
+
+def callback_function(envelope):
+   envelope.tags['ai.cloud.role'] = 'dev_api'
 
 @app.on_event("startup")
 async def startup_event():
     print('using temporary directory:')
     config_integration.trace_integrations(['logging'])
     logger = logging.getLogger(__name__)
-
     handler = AzureLogHandler(connection_string=f'{APPINSIGHTS_CONNECTION_STRING}')
     logger.addHandler(handler)
+    handler.add_telemetry_processor(callback_function)
 
 @app.on_event('shutdown')
 async def shutdown_event():
@@ -65,16 +66,13 @@ async def add_process_time_header(request: Request, call_next):
     tracer = Tracer(exporter=AzureExporter(connection_string=f'{APPINSIGHTS_CONNECTION_STRING}'),sampler=ProbabilitySampler(1.0))
     with tracer.span("main") as span:
         span.span_kind = SpanKind.SERVER
-
         response = await call_next(request)
-
         tracer.add_attribute_to_current_span(
                 attribute_key=HTTP_STATUS_CODE,
                 attribute_value=response.status_code)
         tracer.add_attribute_to_current_span(
             attribute_key=HTTP_URL,
             attribute_value=str(request.url))
-
     return response
 
 @app.get("/")
@@ -156,7 +154,9 @@ async def log_custom_metric():
         print(metrics[0].time_series[0].points[0])
 
     exporter = metrics_exporter.new_metrics_exporter(
-        connection_string=f'{APPINSIGHTS_CONNECTION_STRING}')
+        connection_string=f'{APPINSIGHTS_CONNECTION_STRING}'
+        )
+    exporter.add_telemetry_processor(callback_function)
 
     view_manager.register_exporter(exporter)
     return "Log custom metric"
@@ -169,3 +169,6 @@ if __name__=="__main__":
         host="0.0.0.0",
         log_level="info"
         )
+
+def callback_function(envelope):
+    envelope.tags['ai.cloud.role'] = 'new_role_name'
