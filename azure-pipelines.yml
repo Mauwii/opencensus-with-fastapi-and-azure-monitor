@@ -164,12 +164,12 @@ jobs:
       - task: Cache@2
         displayName: Cache task
         inputs:
-          key: 'docker | buildx | "$(Agent.OS)" | cache'
-          path: $(Pipeline.Workspace)/docker/buildx
+          key: 'docker | "$(Agent.OS)" | cache'
+          path: $(Pipeline.Workspace)/docker
           cacheHitVar: CACHE_RESTORED
 
       - script: |
-          docker load -i $(Pipeline.Workspace)/docker/buildx/cache.tar
+          docker load -i $(Pipeline.Workspace)/docker/cache.tar
         displayName: Docker restore
         condition: and(not(canceled()), eq(variables.CACHE_RESTORED, 'true'))
 
@@ -186,21 +186,31 @@ jobs:
       #     arguments: '--build-arg=PORT=${{ parameters.containerPort }}'
 
       - script: |
-          docker run --privileged --rm tonistiigi/binfmt --install all
-          docker buildx create --name mybuilder --driver docker-container --bootstrap --use
+          docker run \
+            --privileged \
+            --rm \
+            tonistiigi/binfmt \
+            --install all
+          docker buildx create \
+            --name mybuilder \
+            --driver docker-container \
+            --bootstrap \
+            --use
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
+            --build-arg=PORT=${{ parameters.containerPort }} \
             --tag $(repository):$(tag) \
             --tag $(repository):latest${{ variables.devtag }} \
             --push \
+            --file ./Dockerfile \
             .
+          docker stop tonistiigi/binfmt
         displayName: build and push multiarch container
 
       - script: |
-          mkdir -p $(Pipeline.Workspace)/docker/buildx
-          docker save -o $(Pipeline.Workspace)/docker/buildx/cache.tar $(repository):latest${{ variables.devtag }}
+          mkdir -p $(Pipeline.Workspace)/docker
+          docker save -o $(Pipeline.Workspace)/docker/cache.tar $(repository):$(tag)
         displayName: Docker save
-        continueOnError: true
         condition: and(not(canceled()), or(failed(), ne(variables.CACHE_RESTORED, 'true')))
 
       # - task: Docker@2
