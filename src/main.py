@@ -39,7 +39,7 @@ class Club(BaseModel):
 
 # get settings from env
 APPINSIGHTS_CONNECTION_STRING = os.environ['APPINSIGHTS_CONNECTION_STRING']
-PORT = os.environ['WEBSITES_PORT']
+PORT = os.environ['SERVER_PORT']
 # WEBSITE_HOSTNAME = os.environ['WEBSITE_HOSTNAME']
 
 HTTP_URL = COMMON_ATTRIBUTES['HTTP_URL']
