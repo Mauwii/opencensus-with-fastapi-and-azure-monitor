@@ -165,11 +165,11 @@ jobs:
         displayName: Cache task
         inputs:
           key: 'docker | buildx | "$(Agent.OS)" | cache'
-          path: $(Pipeline.Workspace)/docker
+          path: $(Pipeline.Workspace)/docker/buildx
           cacheHitVar: CACHE_RESTORED
 
       - script: |
-          docker load -i $(Pipeline.Workspace)/docker/cache.tar
+          docker load -i $(Pipeline.Workspace)/docker/buildx/cache.tar
         displayName: Docker restore
         condition: and(not(canceled()), eq(variables.CACHE_RESTORED, 'true'))
 
@@ -197,8 +197,8 @@ jobs:
         displayName: build and push multiarch container
 
       - script: |
-          mkdir -p $(Pipeline.Workspace)/docker
-          docker save -o $(Pipeline.Workspace)/docker/cache.tar $(repository):latest${{ variables.devtag }}
+          mkdir -p $(Pipeline.Workspace)/docker/buildx
+          docker save -o $(Pipeline.Workspace)/docker/buildx/cache.tar $(repository):latest${{ variables.devtag }}
         displayName: Docker save
         continueOnError: true
         condition: and(not(canceled()), or(failed(), ne(variables.CACHE_RESTORED, 'true')))
