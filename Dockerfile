@@ -52,4 +52,4 @@ EXPOSE ${PORT}
 
 # CMD [ "gunicorn", "main:app"]
 # ENTRYPOINT [ "entrypoint.sh" ]
-ENTRYPOINT [ "gunicorn", "main:app" ]
+CMD [ "python", "main.py" ]

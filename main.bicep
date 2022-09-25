@@ -36,7 +36,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2020-06-01' = {
 resource appService 'Microsoft.Web/sites@2020-06-01' = {
   name: appServiceName
   location: location
-  kind: 'linux,container'
+  kind: 'web,linux,container'
   properties: {
     httpsOnly: true
     serverFarmId: appServicePlan.id
@@ -49,6 +49,10 @@ resource appService 'Microsoft.Web/sites@2020-06-01' = {
       minTlsVersion: '1.2'
       requestTracingEnabled: true
       appSettings: [
+        {
+          name: 'APPINSIGHTS_INSTRUMENTATION_KEY'
+          value: appInsights.properties.InstrumentationKey
+        }
         {
           name: 'APPINSIGHTS_CONNECTION_STRING'
           value: appInsights.properties.ConnectionString
@@ -88,6 +92,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   kind: 'web'
   properties: {
     Application_Type: 'web'
+    Request_Source: 'rest'
   }
 }
 
