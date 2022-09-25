@@ -13,9 +13,6 @@ parameters:
   - name: azureServiceConnection
     type: string
     default: 'azure-mauwii'
-  # - name: azureSubscription
-  #   type: string
-  #   default: '58c48c56-8c1c-402a-a9d1-5efa2e34e124'
   - name: 'pythonVersion'
     type: string
     default: '3.10'
@@ -41,8 +38,6 @@ parameters:
 variables:
   - name: azureServiceConnection
     value: '${{ parameters.azureServiceConnection }}'
-  # - name: azureSubscription
-  #   value: '${{ parameters.azureSubscription }}'
   - name: repository
     value: '${{ parameters.containerRegistryUsername }}/${{ parameters.name }}'
   - name: tag
@@ -169,7 +164,7 @@ jobs:
       - task: Cache@2
         displayName: Cache task
         inputs:
-          key: 'buildx | docker | "$(Agent.OS)" | cache'
+          key: 'docker | buildx | "$(Agent.OS)" | cache'
           path: $(Pipeline.Workspace)/docker
           cacheHitVar: CACHE_RESTORED
 
@@ -203,7 +198,7 @@ jobs:
 
       - script: |
           mkdir -p $(Pipeline.Workspace)/docker
-          docker save -o $(Pipeline.Workspace)/docker/cache.tar $(repository):$(tag)
+          docker save -o $(Pipeline.Workspace)/docker/cache.tar $(repository):latest${{ variables.devtag }}
         displayName: Docker save
         continueOnError: true
         condition: and(not(canceled()), or(failed(), ne(variables.CACHE_RESTORED, 'true')))
