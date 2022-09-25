@@ -74,10 +74,6 @@ resource appService 'Microsoft.Web/sites@2020-06-01' = {
           value: ''
         }
         {
-          name: 'WEBSITES_ENABLE_APP_SERVICE_STORAGE'
-          value: 'true'
-        }
-        {
           name: 'WEBSITES_PORT'
           value: containerPort
         }

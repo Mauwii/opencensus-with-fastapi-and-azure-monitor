@@ -7,7 +7,7 @@ name = "Gunicorn config for FastAPI"
 # errorlog = "./gunicorn-error.log"
 
 APPINSIGHTS_CONNECTION_STRING = os.environ['APPINSIGHTS_CONNECTION_STRING']
-PORT = os.environ['SERVER_PORT']
+PORT = os.environ['WEBSITES_PORT']
 WEBSITE_HOSTNAME = os.environ['WEBSITE_HOSTNAME']
 
 bind = str(f'{WEBSITE_HOSTNAME}:{PORT}')
