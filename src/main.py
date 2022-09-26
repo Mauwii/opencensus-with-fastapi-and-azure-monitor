@@ -12,7 +12,7 @@ from opencensus.ext.azure.log_exporter import AzureLogHandler
 from fastapi import FastAPI, Request
 from dotenv import load_dotenv
 from datetime import datetime
-import logging, time, os, uvicorn
+import logging, time, os, uvicorn, multiprocessing
 from pydantic import BaseModel
 
 # Metric imports
@@ -35,29 +35,22 @@ class Club(BaseModel):
     established: int
 
 # load en vars
-# load_dotenv()
+load_dotenv()
 
-# get settings from env
-# APPINSIGHTS_INSTRUMENTATIONKEY = os.environ['APPINSIGHTS_INSTRUMENTATIONKEY']
+# get instrumentation key
 APPINSIGHTS_CONNECTIONSTRING = os.environ['APPINSIGHTS_CONNECTIONSTRING']
-PORT = os.environ['WEBSITES_PORT']
-FORWARDED_ALLOW_IPS = os.getenv('WEBSITE_PRIVATE_IP', '127.0.0.1')
-# WEBSITE_HOSTNAME = os.environ['WEBSITE_HOSTNAME']
 
 HTTP_URL = COMMON_ATTRIBUTES['HTTP_URL']
 HTTP_STATUS_CODE = COMMON_ATTRIBUTES['HTTP_STATUS_CODE']
-
-def callback_function(envelope):
-   envelope.tags['ai.cloud.role'] = 'dev_api'
 
 @app.on_event("startup")
 async def startup_event():
     print('using temporary directory:')
     config_integration.trace_integrations(['logging'])
     logger = logging.getLogger(__name__)
-    handler = AzureLogHandler(connection_string=f'{APPINSIGHTS_CONNECTIONSTRING}')
+
+    handler = AzureLogHandler(connection_string=APPINSIGHTS_CONNECTIONSTRING)
     logger.addHandler(handler)
-    handler.add_telemetry_processor(callback_function)
 
 @app.on_event('shutdown')
 async def shutdown_event():
@@ -65,16 +58,19 @@ async def shutdown_event():
 
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
-    tracer = Tracer(exporter=AzureExporter(connection_string=f'{APPINSIGHTS_CONNECTIONSTRING}'),sampler=ProbabilitySampler(1.0))
+    tracer = Tracer(exporter=AzureExporter(connection_string=APPINSIGHTS_CONNECTIONSTRING),sampler=ProbabilitySampler(1.0))
     with tracer.span("main") as span:
         span.span_kind = SpanKind.SERVER
+
         response = await call_next(request)
+
         tracer.add_attribute_to_current_span(
                 attribute_key=HTTP_STATUS_CODE,
                 attribute_value=response.status_code)
         tracer.add_attribute_to_current_span(
             attribute_key=HTTP_URL,
             attribute_value=str(request.url))
+
     return response
 
 @app.get("/")
@@ -156,9 +152,7 @@ async def log_custom_metric():
         print(metrics[0].time_series[0].points[0])
 
     exporter = metrics_exporter.new_metrics_exporter(
-        connection_string=f'{APPINSIGHTS_CONNECTIONSTRING}'
-        )
-    exporter.add_telemetry_processor(callback_function)
+        connection_string=APPINSIGHTS_CONNECTIONSTRING)
 
     view_manager.register_exporter(exporter)
     return "Log custom metric"
@@ -167,10 +161,8 @@ if __name__=="__main__":
     print("main started")
     uvicorn.run(
         "main:app",
-        port=int(PORT),
+        port=int(os.getenv('WEBSITES_PORT', '8080')),
         host="0.0.0.0",
-        log_level="info"
-        )
-
-def callback_function(envelope):
-    envelope.tags['ai.cloud.role'] = 'new_role_name'
+        log_level="info",
+        workers = multiprocessing.cpu_count() * 2 + 1
+    )
