@@ -38,7 +38,8 @@ class Club(BaseModel):
 # load_dotenv()
 
 # get settings from env
-APPINSIGHTS_CONNECTION_STRING = os.environ['APPINSIGHTS_CONNECTION_STRING']
+APPINSIGHTS_INSTRUMENTATIONKEY = os.environ['APPINSIGHTS_INSTRUMENTATIONKEY']
+APPINSIGHTS_CONNECTIONSTRING = os.environ['APPINSIGHTS_CONNECTIONSTRING']
 PORT = os.environ['WEBSITES_PORT']
 FORWARDED_ALLOW_IPS = os.getenv('WEBSITE_PRIVATE_IP', '127.0.0.1')
 # WEBSITE_HOSTNAME = os.environ['WEBSITE_HOSTNAME']
@@ -54,7 +55,7 @@ async def startup_event():
     print('using temporary directory:')
     config_integration.trace_integrations(['logging'])
     logger = logging.getLogger(__name__)
-    handler = AzureLogHandler(connection_string=f'{APPINSIGHTS_CONNECTION_STRING}')
+    handler = AzureLogHandler(connection_string=f'{APPINSIGHTS_CONNECTIONSTRING}')
     logger.addHandler(handler)
     handler.add_telemetry_processor(callback_function)
 
@@ -64,7 +65,7 @@ async def shutdown_event():
 
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
-    tracer = Tracer(exporter=AzureExporter(connection_string=f'{APPINSIGHTS_CONNECTION_STRING}'),sampler=ProbabilitySampler(1.0))
+    tracer = Tracer(exporter=AzureExporter(connection_string=f'{APPINSIGHTS_CONNECTIONSTRING}'),sampler=ProbabilitySampler(1.0))
     with tracer.span("main") as span:
         span.span_kind = SpanKind.SERVER
         response = await call_next(request)
@@ -155,7 +156,7 @@ async def log_custom_metric():
         print(metrics[0].time_series[0].points[0])
 
     exporter = metrics_exporter.new_metrics_exporter(
-        connection_string=f'{APPINSIGHTS_CONNECTION_STRING}'
+        connection_string=f'{APPINSIGHTS_CONNECTIONSTRING}'
         )
     exporter.add_telemetry_processor(callback_function)
 

@@ -50,11 +50,11 @@ resource appService 'Microsoft.Web/sites@2020-06-01' = {
       requestTracingEnabled: true
       appSettings: [
         {
-          name: 'APPINSIGHTS_INSTRUMENTATION_KEY'
+          name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
           value: appInsights.properties.InstrumentationKey
         }
         {
-          name: 'APPINSIGHTS_CONNECTION_STRING'
+          name: 'APPINSIGHTS_CONNECTIONSTRING'
           value: appInsights.properties.ConnectionString
         }
         {

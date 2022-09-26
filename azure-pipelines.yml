@@ -144,7 +144,7 @@ jobs:
         displayName: run pytest
         env:
           WEBSITES_PORT: ${{ parameters.containerPort }}
-          APPINSIGHTS_CONNECTION_STRING: $(connectionString)
+          APPINSIGHTS_CONNECTIONSTRING: $(connectionString)
 
       - task: PublishTestResults@2
         condition: succeededOrFailed()
