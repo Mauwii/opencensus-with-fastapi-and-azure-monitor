@@ -203,21 +203,20 @@ jobs:
             --tag="$(repository):$(tag)" \
             --tag="$(repository):latest${{ variables.devtag }}" \
             --file="${{ parameters.dockerfile }}" \
-            ${{ variables.cacheCommand }} \
             --push \
             .
-        env:
-          ${{ if eq(variables.CACHE_RESTORED, 'true') }}:
-            cacheCommand: '--cache-from="type=local,src=$(Pipeline.Workspace)/docker/buildx"'
-          ${{ if ne(variables.CACHE_RESTORED, 'true') }}:
-            cacheCommand: '--cache-to="type=local,dest=$(Pipeline.Workspace)/docker/buildx"'
+        # env:
+        #   ${{ if eq(variables.CACHE_RESTORED, 'true') }}:
+        #     cacheCommand: '--cache-from="type=local,src=$(Pipeline.Workspace)/docker/buildx"'
+        #   ${{ if ne(variables.CACHE_RESTORED, 'true') }}:
+        #     cacheCommand: '--cache-to="type=local,dest=$(Pipeline.Workspace)/docker/buildx"'
         displayName: build and push multiarch container
 
-      # - script: |
-      #     mkdir -p $(Pipeline.Workspace)/docker/buildx
-      #     docker save -o $(Pipeline.Workspace)/docker/buildx/cache.tar $(repository):$(tag) $(repository):latest${{ variables.devtag }}
-      #   displayName: Docker save
-      #   condition: and(not(canceled()), or(failed(), ne(variables.CACHE_RESTORED, 'true')))
+      - script: |
+          mkdir -p $(Pipeline.Workspace)/docker/buildx
+          docker save -o $(Pipeline.Workspace)/docker/buildx/cache.tar moby/buildkit:buildx-stable-1 tonistiigi/binfmt:latest
+        displayName: Docker save
+        condition: and(not(canceled()), or(failed(), ne(variables.CACHE_RESTORED, 'true')))
 
   # - job: webAppContainer
   #   dependsOn: container
