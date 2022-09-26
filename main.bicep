@@ -16,7 +16,8 @@ var uniqueName = toLower('${name}-${substring(uniqueString(resourceGroup().id), 
 var appServiceName = uniqueName
 var appServicePlanName = 'asp-${uniqueName}'
 var appInsightsName = 'insights-${uniqueName}'
-var linuxFxVersion = 'DOCKER|${containerRegistryUsername}/${name}:${containerTag}'
+var containerRegistry = replace(containerRegistryUrl, 'https://index.', '')
+var linuxFxVersion = 'DOCKER|${containerRegistry}/${containerRegistryUsername}/${name}:${containerTag}'
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2020-06-01' = {
   name: appServicePlanName
