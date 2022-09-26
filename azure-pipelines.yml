@@ -146,8 +146,7 @@ jobs:
             --junitxml=junit/test-results.xml
         displayName: run pytest
         env:
-          WEBSITES_PORT: ${{ parameters.containerPort }}
-          APPINSIGHTS_CONNECTIONSTRING: $(connectionString)
+          APPLICATIONINSIGHTS_CONNECTION_STRING: $(connectionString)
 
       - task: PublishTestResults@2
         condition: succeededOrFailed()
