@@ -64,8 +64,8 @@ source .venv/bin/activate
 3. Rename the `.env.sample.txt` file to `.env`  
 This contains the environment variables that you need to set for your Azure Storage account.
 
-4. Set Application Insights Instrumentation Key variables in the `.env` file:  
-`APPINSIGHTS_INSTRUMENTATIONKEY`
+4. Set Application Insights connection string variable in the `.env` file:  
+`APPINSIGHTS_CONNECTIONSTRING`
 
 5. Install the dependencies.
 
