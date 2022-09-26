@@ -55,7 +55,7 @@ resource appService 'Microsoft.Web/sites@2020-06-01' = {
           value: appInsights.properties.InstrumentationKey
         }
         {
-          name: 'APPINSIGHTS_CONNECTIONSTRING'
+          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
           value: appInsights.properties.ConnectionString
         }
         {
