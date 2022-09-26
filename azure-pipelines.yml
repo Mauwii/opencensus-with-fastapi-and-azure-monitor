@@ -22,6 +22,9 @@ parameters:
   - name: containerPort
     type: string
     default: '8080'
+  - name: containerRegistryServiceConnection
+    type: string
+    default: 'docker-mauwii'
   - name: containerRegistryUrl
     type: string
     default: 'https://index.docker.io'
@@ -171,7 +174,7 @@ jobs:
       # - task: Docker@2
       #   displayName: build Container
       #   inputs:
-      #     containerRegistry: 'docker-mauwii'
+      #     containerRegistry: '${{ parameters.containerRegistryServiceConnection }}'
       #     repository: '$(repository)'
       #     command: 'build'
       #     Dockerfile: './Dockerfile'
@@ -182,7 +185,7 @@ jobs:
 
       - task: Docker@2
         inputs:
-          containerRegistry: 'docker-mauwii'
+          containerRegistry: '${{ parameters.containerRegistryServiceConnection }}'
           command: 'login'
 
       - script: |
@@ -215,7 +218,7 @@ jobs:
       # - task: Docker@2
       #   displayName: push Container
       #   inputs:
-      #     containerRegistry: 'docker-mauwii'
+      #     containerRegistry: '${{ parameters.containerRegistryServiceConnection }}'
       #     repository: '$(repository)'
       #     command: 'push'
       #     tags: |
