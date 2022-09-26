@@ -10,16 +10,16 @@ COPY src ./
 
 RUN python -m venv .venv \
   && python -m pip install \
-  --require-virtualenv \
-  --no-cache-dir \
-  --upgrade \
-  pip \
-  setuptools \
-  wheel \
+    --require-virtualenv \
+    --no-cache-dir \
+    --upgrade \
+      pip \
+      setuptools \
+      wheel \
   && python -m pip install \
-  --require-virtualenv \
-  --no-cache-dir \
-  -r /tmp/requirements.txt
+    --require-virtualenv \
+    --no-cache-dir \
+    -r /tmp/requirements.txt
 
 # ---- Main Stage ----
 FROM python:3.10-slim
@@ -46,9 +46,9 @@ WORKDIR ${APP_PATH}
 
 COPY --from=builder ${APP_PATH} ${APP_PATH}
 ENV PATH ${APP_PATH}/.venv/bin:${PATH}
+
 ARG PORT=8080
-# EXPOSE ${PORT} 2222
-EXPOSE ${PORT}
+EXPOSE ${PORT} 2222
 
 # CMD [ "gunicorn", "main:app"]
 # ENTRYPOINT [ "entrypoint.sh" ]
