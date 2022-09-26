@@ -19,6 +19,9 @@ parameters:
   - name: name
     type: string
     default: 'fastapi-opencensus'
+  - name: dockerfile
+    type: string
+    default: 'docker/Dockerfile'
   - name: containerPort
     type: string
     default: '8080'
@@ -159,7 +162,7 @@ jobs:
     dependsOn: testPythonApp
     steps:
       - task: Cache@2
-        displayName: check if cache exists
+        displayName: Cache task
         inputs:
           key: 'docker | "$(Agent.OS)" | cache'
           path: $(Pipeline.Workspace)/docker
@@ -167,7 +170,7 @@ jobs:
 
       - script: |
           docker load -i $(Pipeline.Workspace)/docker/cache.tar
-        displayName: restore cache
+        displayName: Docker restore
         condition: and(not(canceled()), eq(variables.CACHE_RESTORED, 'true'))
 
       # - task: Docker@2
@@ -176,7 +179,7 @@ jobs:
       #     containerRegistry: '${{ parameters.containerRegistryServiceConnection }}'
       #     repository: '$(repository)'
       #     command: 'build'
-      #     Dockerfile: './Dockerfile'
+      #     Dockerfile: '{{ parameters.dockerfile }}'
       #     tags: |
       #       latest${{ variables.devtag }}
       #       $(tag)
@@ -204,7 +207,7 @@ jobs:
             --tag $(repository):$(tag) \
             --tag $(repository):latest${{ variables.devtag }} \
             --push \
-            --file ./Dockerfile \
+            --file {{ parameters.dockerfile }} \
             .
         displayName: build and push multiarch container
 

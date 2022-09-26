@@ -44,12 +44,13 @@ RUN apt-get update \
 COPY docker/sshd_config /etc/ssh/
 COPY docker/entrypoint.sh /usr/local/bin/
 
+# copy app from build-stage
 COPY --from=builder ${APP_PATH} ${APP_PATH}
 ENV PATH ${APP_PATH}/.venv/bin:${PATH}
 
+# expose ports
 ARG PORT=8080
 EXPOSE ${PORT} 2222
 
-# CMD [ "gunicorn", "main:app"]
+# set entrypoint
 ENTRYPOINT [ "entrypoint.sh" ]
-# CMD [ "python", "main.py" ]
