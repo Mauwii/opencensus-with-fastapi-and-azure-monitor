@@ -24,25 +24,25 @@ RUN python -m venv .venv \
 # ---- Main Stage ----
 FROM python:3.10-slim
 
-# SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # set Workdir
 ARG APP_PATH=/app
 WORKDIR ${APP_PATH}
 
 # # install SSH
-# ENV SSH_PASSWD "root:Docker!"
-# COPY docker/ssh_setup /tmp
-# RUN apt-get update \
-#   && apt-get install -y --no-install-recommends \
-#     dialog \
-#     openssh-server \
-#   && echo ${SSH_PASSWD} | chpasswd \
-#   && /tmp/ssh_setup \
-#   && apt-get clean \
-#   && rm -rf /var/lib/apt/lists/*
-# COPY docker/sshd_config /etc/ssh/
-# COPY docker/entrypoint.sh /usr/local/bin/
+ENV SSH_PASSWD "root:Docker!"
+COPY docker/ssh_setup /tmp
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    dialog \
+    openssh-server \
+  && echo ${SSH_PASSWD} | chpasswd \
+  && /tmp/ssh_setup \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+COPY docker/sshd_config /etc/ssh/
+COPY docker/entrypoint.sh /usr/local/bin/
 
 COPY --from=builder ${APP_PATH} ${APP_PATH}
 ENV PATH ${APP_PATH}/.venv/bin:${PATH}
@@ -51,5 +51,5 @@ ARG PORT=8080
 EXPOSE ${PORT} 2222
 
 # CMD [ "gunicorn", "main:app"]
-# ENTRYPOINT [ "entrypoint.sh" ]
-CMD [ "python", "main.py" ]
+ENTRYPOINT [ "entrypoint.sh" ]
+# CMD [ "python", "main.py" ]

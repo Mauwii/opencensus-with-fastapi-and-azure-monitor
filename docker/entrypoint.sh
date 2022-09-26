@@ -9,4 +9,4 @@ echo "Starting SSH ..."
 service ssh start
 
 echo "Starting fastapi ..."
-gunicorn main:app
+python main.py
