@@ -161,6 +161,11 @@ jobs:
     displayName: Container
     dependsOn: testPythonApp
     steps:
+      - task: Docker@2
+        inputs:
+          containerRegistry: '${{ parameters.containerRegistryServiceConnection }}'
+          command: 'login'
+
       - task: Cache@2
         displayName: Cache task
         inputs:
@@ -185,11 +190,6 @@ jobs:
       #       $(tag)
       #     arguments: '--build-arg=PORT=${{ parameters.containerPort }}'
 
-      - task: Docker@2
-        inputs:
-          containerRegistry: '${{ parameters.containerRegistryServiceConnection }}'
-          command: 'login'
-
       - script: |
           docker run \
             --privileged \
@@ -202,12 +202,12 @@ jobs:
             --bootstrap \
             --use
           docker buildx build \
-            --platform linux/amd64,linux/arm64 \
-            --build-arg=PORT=${{ parameters.containerPort }} \
-            --tag $(repository):$(tag) \
-            --tag $(repository):latest${{ variables.devtag }} \
+            --platform="linux/amd64,linux/arm64" \
+            --build-arg=PORT="${{ parameters.containerPort }}" \
+            --tag="$(repository):$(tag)" \
+            --tag="$(repository):latest${{ variables.devtag }}" \
+            --file="{{ parameters.dockerfile }}" \
             --push \
-            --file {{ parameters.dockerfile }} \
             .
         displayName: build and push multiarch container
 
