@@ -13,6 +13,9 @@ parameters:
   - name: azureServiceConnection
     type: string
     default: 'azure-mauwii'
+  - name: subscriptionId
+    type: string
+    default: '58c48c56-8c1c-402a-a9d1-5efa2e34e124'
   - name: 'pythonVersion'
     type: string
     default: '3.10'
@@ -64,6 +67,7 @@ jobs:
           scriptLocation: inlineScript
           inlineScript: |
             az group create \
+              --subscription ${{ parameters.subscriptionId }} \
               --resource-group ${{ parameters.name }} \
               --location ${{ parameters.resourceLocation }}
 
@@ -76,6 +80,7 @@ jobs:
           inlineScript: |
             az deployment group what-if \
               --resource-group ${{ parameters.name }} \
+              --subscription ${{ parameters.subscriptionId }} \
               --template-file main.bicep \
               --name=$(Build.SourceBranchName) \
               --parameters \
@@ -94,6 +99,7 @@ jobs:
           inlineScript: |
             az deployment group create \
               --resource-group ${{ parameters.name }} \
+              --subscription ${{ parameters.subscriptionId }} \
               --template-file main.bicep \
               --name=$(Build.SourceBranchName) \
               --parameters \
@@ -116,10 +122,12 @@ jobs:
           inlineScript: |
             insightsId=$(az deployment group show \
               --resource-group ${{ parameters.name }} \
+              --subscription ${{ parameters.subscriptionId }} \
               --name $(Build.SourceBranchName) \
               --query properties.outputs.insightsId.value \
               -o tsv)
             connectionString=$(az resource show \
+              --subscription ${{ parameters.subscriptionId }} \
               --ids $insightsId \
               --query properties.ConnectionString \
               -o tsv)
@@ -184,7 +192,7 @@ jobs:
       #     containerRegistry: '${{ parameters.containerRegistryServiceConnection }}'
       #     repository: '$(repository)'
       #     command: 'build'
-      #     Dockerfile: '{{ parameters.dockerfile }}'
+      #     Dockerfile: '${{ parameters.dockerfile }}'
       #     tags: |
       #       latest${{ variables.devtag }}
       #       $(tag)
@@ -206,7 +214,7 @@ jobs:
             --build-arg=PORT="${{ parameters.containerPort }}" \
             --tag="$(repository):$(tag)" \
             --tag="$(repository):latest${{ variables.devtag }}" \
-            --file="{{ parameters.dockerfile }}" \
+            --file="${{ parameters.dockerfile }}" \
             --push \
             .
         displayName: build and push multiarch container
