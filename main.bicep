@@ -54,14 +54,14 @@ resource appService 'Microsoft.Web/sites@2020-06-01' = {
           name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
           value: appInsights.properties.ConnectionString
         }
-        // {
-        //   name: 'ApplicationInsightsAgent_EXTENSION_VERSION'
-        //   value: '~3'
-        // }
-        // {
-        //   name: 'XDT_MicrosoftApplicationInsights_Mode'
-        //   value: 'Recommended'
-        // }
+        {
+          name: 'ApplicationInsightsAgent_EXTENSION_VERSION'
+          value: '~3'
+        }
+        {
+          name: 'XDT_MicrosoftApplicationInsights_Mode'
+          value: 'Recommended'
+        }
         {
           name: 'DOCKER_REGISTRY_SERVER_URL'
           value: containerRegistryUrl
@@ -80,7 +80,7 @@ resource appService 'Microsoft.Web/sites@2020-06-01' = {
         }
         {
           name: 'WEBSITES_ENABLE_APP_SERVICE_STORAGE'
-          value: 'true'
+          value: 'TRUE'
         }
       ]
     }

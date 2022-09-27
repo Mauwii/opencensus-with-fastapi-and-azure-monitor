@@ -17,21 +17,21 @@ touch ${PERSIST_LOGS}-access.log
 touch ${PERSIST_LOGS}-error.log
 tail -n 0 -f ${PERSIST_LOGS}*.log &
 
+FORWARDED_ALLOW_IPS=("${WEBSITE_SITE_NAME}" "${HOSTNAME}" "127.0.0.1")
+
 # [[ "$(python -c 'import multiprocessing; print(multiprocessing.cpu_count() * 2 + 1)')" -gt 12 ]] && workers=12
 echo "Starting fastapi ..."
 gunicorn \
-  --proxy-protocol \
   --bind "0.0.0.0:${WEBSITES_PORT:-8080}" \
   --name "${WEBSITE_SITE_NAME:-fastapi-opencensus}" \
-  --forwarded-allow-ips "${WEBSITE_SITE_NAME:-${HOSTNAME:-127.0.0.1}}" \
+  --forwarded-allow-ips "${WEBSITE_HOSTNAME:-${WEBSITE_SITE_NAME:-127.0.0.1}}" \
   --worker-class uvicorn.workers.UvicornWorker \
   --workers 4 \
   --log-level "${LOGLEVEL:-info}" \
   --log-file "${PERSIST_LOGS}.log" \
   --access-logfile "${PERSIST_LOGS}-access.log" \
   --error-logfile "${PERSIST_LOGS}-error.log" \
-  --timeout 600 \
-  --chdir /app \
+  --timeout 240 \
   'main:app'
   # --forwarded-allow-ips "${WEBSITE_PRIVATE_IP:-127.0.0.1}" \
   # --forwarded-allow-ips="${WEBSITE_PRIVATE_IP:-127.0.0.1}" \
