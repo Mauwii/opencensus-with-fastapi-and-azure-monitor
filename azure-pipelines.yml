@@ -40,9 +40,9 @@ parameters:
   - name: containerRegistryUsername
     type: string
     default: 'mauwii'
-  - name: containerTag
-    type: string
-    default: '$(Build.BuildId)'
+  # - name: containerTag
+  #   type: string
+  #   default: '$(Build.BuildId)'
   - name: resourceLocation
     type: string
     default: 'westeurope'
@@ -53,7 +53,7 @@ variables:
   - name: repository
     value: '${{ parameters.containerRegistryUsername }}/${{ parameters.name }}'
   - name: tag
-    value: '${{ parameters.containerTag }}'
+    value: 'latest'
   - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/dev') }}:
       - name: devtag
         value: '-dev'
@@ -91,7 +91,7 @@ jobs:
                 containerRegistryUrl=${{ parameters.containerRegistryUrl }} \
                 containerRegistryUsername=${{ parameters.containerRegistryUsername }} \
                 containerPort=${{ parameters.containerPort }} \
-                containerTag=$(tag)
+                containerTag=$(tag)${{ variables.devtag }}
 
       - task: AzureCLI@2
         displayName: deplyo Resources
@@ -110,7 +110,7 @@ jobs:
                 containerRegistryUrl=${{ parameters.containerRegistryUrl }} \
                 containerRegistryUsername=${{ parameters.containerRegistryUsername }} \
                 containerPort=${{ parameters.containerPort }} \
-                containerTag=$(tag)
+                containerTag=$(tag)${{ variables.devtag }}
 
   - job: testPythonApp
     displayName: test python
@@ -204,7 +204,7 @@ jobs:
             --platform="linux/amd64,linux/arm64" \
             --build-arg="PORT=${{ parameters.containerPort }}" \
             --build-arg="APP_PATH=${{ parameters.containerAppPath }}" \
-            --tag="$(repository):$(tag)" \
+            --tag="$(repository):$(Build.BuildId)" \
             --tag="$(repository):latest${{ variables.devtag }}" \
             --file="${{ parameters.dockerfile }}" \
             --push \
