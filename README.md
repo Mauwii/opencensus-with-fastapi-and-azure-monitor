@@ -65,7 +65,7 @@ source .venv/bin/activate
 This contains the environment variables that you need to set for your Azure Storage account.
 
 4. Set Application Insights connection string variable in the `.env` file:  
-`APPINSIGHTS_CONNECTIONSTRING`
+`APPLICATIONINSIGHTS_CONNECTION_STRING`
 
 5. Install the dependencies.
 
