@@ -2,6 +2,7 @@ fastapi
 opencensus
 opencensus-ext-azure
 opencensus-ext-logging
+gunicorn
 uvicorn
 python-dotenv
 pytest
