@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Opencensus Azure imports
 from opencensus.trace.attributes_helper import COMMON_ATTRIBUTES
 from opencensus.ext.azure.trace_exporter import AzureExporter
@@ -12,7 +13,7 @@ from opencensus.ext.azure.log_exporter import AzureLogHandler
 from fastapi import FastAPI, Request
 from dotenv import load_dotenv
 from datetime import datetime
-import logging, time, os, uvicorn, multiprocessing
+import logging, time, os, uvicorn, gunicorn
 from pydantic import BaseModel
 
 # Metric imports
@@ -159,4 +160,8 @@ async def log_custom_metric():
 
 if __name__=="__main__":
     print("main started")
-    uvicorn.run("main:app", port=8000, log_level="info")
+    uvicorn.run(
+        "main:app",
+        port=int(os.getenv("WEBSITES_PORT", "8080")),
+        log_level="info"
+        )
