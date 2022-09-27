@@ -37,18 +37,14 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2020-06-01' = {
 resource appService 'Microsoft.Web/sites@2020-06-01' = {
   name: appServiceName
   location: location
-  kind: 'web,linux,container'
+  kind: 'linux,container'
   properties: {
     httpsOnly: true
     serverFarmId: appServicePlan.id
     siteConfig: {
-      detailedErrorLoggingEnabled: true
       ftpsState: 'FtpsOnly'
-      httpLoggingEnabled: true
       linuxFxVersion: linuxFxVersion
-      logsDirectorySizeLimit: 35
       minTlsVersion: '1.2'
-      requestTracingEnabled: true
       appSettings: [
         {
           name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
@@ -58,14 +54,14 @@ resource appService 'Microsoft.Web/sites@2020-06-01' = {
           name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
           value: appInsights.properties.ConnectionString
         }
-        {
-          name: 'ApplicationInsightsAgent_EXTENSION_VERSION'
-          value: '~3'
-        }
-        {
-          name: 'XDT_MicrosoftApplicationInsights_Mode'
-          value: 'Recommended'
-        }
+        // {
+        //   name: 'ApplicationInsightsAgent_EXTENSION_VERSION'
+        //   value: '~3'
+        // }
+        // {
+        //   name: 'XDT_MicrosoftApplicationInsights_Mode'
+        //   value: 'Recommended'
+        // }
         {
           name: 'DOCKER_REGISTRY_SERVER_URL'
           value: containerRegistryUrl
@@ -87,6 +83,30 @@ resource appService 'Microsoft.Web/sites@2020-06-01' = {
           value: 'true'
         }
       ]
+    }
+  }
+}
+
+resource appServiceAppSettings 'Microsoft.Web/sites/config@2020-06-01' = {
+  parent: appService
+  name: 'logs'
+  properties: {
+    applicationLogs: {
+      fileSystem: {
+        level: 'Information'
+      }
+    }
+    httpLogs: {
+      fileSystem: {
+        retentionInMb: 35
+        enabled: true
+      }
+    }
+    failedRequestsTracing: {
+      enabled: true
+    }
+    detailedErrorMessages: {
+      enabled: true
     }
   }
 }
