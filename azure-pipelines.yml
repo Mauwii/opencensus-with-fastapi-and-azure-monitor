@@ -30,7 +30,7 @@ parameters:
     default: '8080'
   - name: containerAppPath
     type: string
-    default: '/home/app'
+    default: '/app'
   - name: containerRegistryServiceConnection
     type: string
     default: 'docker-mauwii'
@@ -40,9 +40,6 @@ parameters:
   - name: containerRegistryUsername
     type: string
     default: 'mauwii'
-  # - name: containerTag
-  #   type: string
-  #   default: '$(Build.BuildId)'
   - name: resourceLocation
     type: string
     default: 'westeurope'
