@@ -28,6 +28,9 @@ parameters:
   - name: containerPort
     type: string
     default: '8080'
+  - name: containerAppPath
+    type: string
+    default: '/home/app'
   - name: containerRegistryServiceConnection
     type: string
     default: 'docker-mauwii'
@@ -199,17 +202,13 @@ jobs:
             --use
           docker buildx build \
             --platform="linux/amd64,linux/arm64" \
-            --build-arg=PORT="${{ parameters.containerPort }}" \
+            --build-arg="PORT=${{ parameters.containerPort }}" \
+            --build-arg="APP_PATH=${{ parameters.containerAppPath }}" \
             --tag="$(repository):$(tag)" \
             --tag="$(repository):latest${{ variables.devtag }}" \
             --file="${{ parameters.dockerfile }}" \
             --push \
             .
-        # env:
-        #   ${{ if eq(variables.CACHE_RESTORED, 'true') }}:
-        #     cacheCommand: '--cache-from="type=local,src=$(Pipeline.Workspace)/docker/buildx"'
-        #   ${{ if ne(variables.CACHE_RESTORED, 'true') }}:
-        #     cacheCommand: '--cache-to="type=local,dest=$(Pipeline.Workspace)/docker/buildx"'
         displayName: build and push multiarch container
 
       - script: |
