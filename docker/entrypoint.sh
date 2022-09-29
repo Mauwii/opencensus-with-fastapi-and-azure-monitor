@@ -9,32 +9,28 @@ echo "Starting SSH ..."
 service ssh start
 
 # persistent logs
-PERSIST_LOGS_DIR=/home/LogFiles
-PERSIST_LOGS=${PERSIST_LOGS_DIR}/gunicorn
-mkdir -p ${PERSIST_LOGS_DIR}
-touch ${PERSIST_LOGS}.log
-touch ${PERSIST_LOGS}-access.log
-touch ${PERSIST_LOGS}-error.log
-tail -n 0 -f ${PERSIST_LOGS}*.log &
-
-FORWARDED_ALLOW_IPS=("${WEBSITE_SITE_NAME}" "${HOSTNAME}" "127.0.0.1")
+PERSISTENT_LOGS_DIR="${WEBAPP_STORAGE_HOME:-/home/LogFiles}"
+PERSISTENT_LOGS="${PERSISTENT_LOGS_DIR}/gunicorn"
+mkdir -p "${PERSISTENT_LOGS_DIR}"
+touch "${PERSISTENT_LOGS}.log"
+touch "${PERSISTENT_LOGS}-access.log"
+touch "${PERSISTENT_LOGS}-error.log"
+tail -n 0 -f "${PERSISTENT_LOGS}"*.log &
 
 # [[ "$(python -c 'import multiprocessing; print(multiprocessing.cpu_count() * 2 + 1)')" -gt 12 ]] && workers=12
 echo "Starting fastapi ..."
 gunicorn \
   --bind "0.0.0.0:${WEBSITES_PORT:-8080}" \
   --name "${WEBSITE_SITE_NAME:-fastapi-opencensus}" \
-  --forwarded-allow-ips "${WEBSITE_HOSTNAME:-${WEBSITE_SITE_NAME:-127.0.0.1}}" \
+  --forwarded-allow-ips "${WEBSITE_HOSTNAME:-{HOSTNAME:-127.0.0.1}}" \
   --worker-class uvicorn.workers.UvicornWorker \
-  --workers 4 \
+  --workers 2 \
   --log-level "${LOGLEVEL:-info}" \
-  --log-file "${PERSIST_LOGS}.log" \
-  --access-logfile "${PERSIST_LOGS}-access.log" \
-  --error-logfile "${PERSIST_LOGS}-error.log" \
+  --log-file "${PERSISTENT_LOGS}.log" \
+  --access-logfile "${PERSISTENT_LOGS}-access.log" \
+  --error-logfile "${PERSISTENT_LOGS}-error.log" \
   --timeout 240 \
   'main:app'
-  # --forwarded-allow-ips "${WEBSITE_PRIVATE_IP:-127.0.0.1}" \
-  # --forwarded-allow-ips="${WEBSITE_PRIVATE_IP:-127.0.0.1}" \
 #  --workers ${workers:-$(python -c 'import multiprocessing; print(multiprocessing.cpu_count() * 2 + 1)')} \
 
 # uvicorn main:app \

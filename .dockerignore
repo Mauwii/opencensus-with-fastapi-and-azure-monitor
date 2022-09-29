@@ -1,5 +1,5 @@
 *
 !.venv
-!src
+!src/main.py
 !requirements.txt
 !docker

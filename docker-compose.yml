@@ -1,0 +1,15 @@
+services:
+  api:
+    image: docker.io/mauwii/fastapi-opencensus:latest-dev
+    build:
+      args:
+        - APP_PATH=/usr/src/app
+        - PORT=8080
+        - PYTHON_VERSION=3.10
+      dockerfile: docker/Dockerfile
+      context: .
+    container_name: fastapi
+    ports:
+      - 8080:8080
+    env_file:
+      - ./.env

@@ -1,5 +1,8 @@
-# ----- Build Stage -----
-FROM python:3.10 AS builder
+# -----------
+# Build Stage
+# -----------
+ARG PYTHON_VERSION=3.10
+FROM python:${PYTHON_VERSION} AS builder
 
 ARG APP_PATH=/app
 WORKDIR ${APP_PATH}
@@ -12,17 +15,12 @@ RUN python -m venv .venv \
   && python -m pip install \
     --require-virtualenv \
     --no-cache-dir \
-    --upgrade \
-      pip \
-      setuptools \
-      wheel \
-  && python -m pip install \
-    --require-virtualenv \
-    --no-cache-dir \
     -r /tmp/requirements.txt
 
-# ---- Main Stage ----
-FROM python:3.10-slim
+# ----------
+# Main Stage
+# ----------
+FROM python:${PYTHON_VERSION}-slim
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -30,21 +28,15 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG APP_PATH=/app
 WORKDIR ${APP_PATH}
 
-# # install SSH
-ENV SSH_PASSWD "root:Docker!"
-COPY docker/ssh_setup /tmp
+# install SSH
+COPY docker/sshd_config /etc/ssh/
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends \
-    dialog \
-    openssh-server \
-  && echo ${SSH_PASSWD} | chpasswd \
-  && /tmp/ssh_setup \
+  && apt-get install -y --no-install-recommends openssh-server \
+  && echo "root:Docker!" | chpasswd \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
-COPY docker/sshd_config /etc/ssh/
-COPY docker/entrypoint.sh /usr/local/bin/
 
-# copy app from build-stage
+# copy app from builder
 COPY --from=builder ${APP_PATH} ${APP_PATH}
 ENV PATH ${APP_PATH}/.venv/bin:${PATH}
 
@@ -53,4 +45,5 @@ ARG PORT=8080
 EXPOSE ${PORT} 2222
 
 # set entrypoint
-ENTRYPOINT [ "entrypoint.sh" ]
+COPY docker/entrypoint.sh /usr/local/bin/
+ENTRYPOINT ["entrypoint.sh"]
