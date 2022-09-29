@@ -22,7 +22,7 @@ echo "Starting fastapi ..."
 gunicorn \
   --bind "0.0.0.0:${WEBSITES_PORT:-8080}" \
   --name "${WEBSITE_SITE_NAME:-fastapi-opencensus}" \
-  --forwarded-allow-ips "${WEBSITE_HOSTNAME:-{HOSTNAME:-127.0.0.1}}" \
+  --forwarded-allow-ips "${WEBSITE_HOSTNAME:-${HOSTNAME:-127.0.0.1}}" \
   --worker-class uvicorn.workers.UvicornWorker \
   --workers 2 \
   --log-level "${LOGLEVEL:-info}" \
