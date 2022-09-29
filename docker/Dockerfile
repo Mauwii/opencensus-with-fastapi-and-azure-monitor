@@ -20,7 +20,7 @@ RUN python -m venv .venv \
 # ----------
 # Main Stage
 # ----------
-FROM python:${PYTHON_VERSION}-slim
+FROM python:${PYTHON_VERSION}-slim AS main
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -30,10 +30,11 @@ WORKDIR ${APP_PATH}
 
 # install SSH
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends openssh-server \
-  && echo "root:Docker!" | chpasswd \
+  && apt-get install -y --no-install-recommends \
+    openssh-server=1:8.* \
   && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
+  && rm -rf /var/lib/apt/lists/* \
+  && echo "root:Docker!" | chpasswd
 COPY docker/sshd_config /etc/ssh/
 
 # copy app from builder

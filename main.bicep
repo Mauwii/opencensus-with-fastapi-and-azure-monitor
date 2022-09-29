@@ -75,6 +75,18 @@ resource appService 'Microsoft.Web/sites@2020-06-01' = {
           value: ''
         }
         {
+          name: 'GUNICORN_LOGLEVEL'
+          value: 'info'
+        }
+        {
+          name: 'GUNICORN_TIMEOUT'
+          value: '300'
+        }
+        {
+          name: 'GUNICORN_WORKERS'
+          value: '2'
+        }
+        {
           name: 'WEBSITES_PORT'
           value: containerPort
         }
